@@ -12,8 +12,10 @@ from fastapi.staticfiles import StaticFiles
 from brickvalue import __version__
 from brickvalue.data import reference
 from brickvalue.domain.inputs import ValuationRequest
+from brickvalue.domain.quick import QuickValuationRequest
 from brickvalue.domain.results import SurfaceResult, ValuationReport
 from brickvalue.domain.surface import SurfaceInput
+from brickvalue.engine.quick import quick_valuate
 from brickvalue.engine.surface import compute_surface
 from brickvalue.engine.valuator import valuate
 
@@ -70,11 +72,31 @@ def create_app() -> FastAPI:
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+    @app.post("/api/valuate/quick", response_model=ValuationReport, tags=["valuation"])
+    def post_quick(request: QuickValuationRequest) -> ValuationReport:
+        """Valutazione rapida della versione base (input semplificati)."""
+        try:
+            return quick_valuate(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
     # Frontend statico (se presente)
     if _FRONTEND_DIR.is_dir():
+        def _page(name: str) -> FileResponse:
+            return FileResponse(_FRONTEND_DIR / name)
+
         @app.get("/", include_in_schema=False)
         def index() -> FileResponse:
-            return FileResponse(_FRONTEND_DIR / "index.html")
+            return _page("index.html")
+
+        @app.get("/base", include_in_schema=False)
+        def base_page() -> FileResponse:
+            return _page("base.html")
+
+        @app.get("/full", include_in_schema=False)
+        @app.get("/tecnico", include_in_schema=False)
+        def full_page() -> FileResponse:
+            return _page("full.html")
 
         app.mount(
             "/app",

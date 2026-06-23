@@ -122,6 +122,14 @@ function buildRequest() {
     if (v != null) property[f] = v;
   }
 
+  // Ubicazione (opzionale)
+  const location = {};
+  for (const field of ["address", "municipality", "cadastral_ref"]) {
+    const el = form.elements[field];
+    if (el && el.value && el.value.trim()) location[field] = el.value.trim();
+  }
+  if (Object.keys(location).length) property.location = location;
+
   const req = {
     property,
     surface: { components, wall_incidence_pct: (numOrNull("wall_incidence_pct") || 0) / 100 },

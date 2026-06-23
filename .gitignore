@@ -40,3 +40,8 @@ Thumbs.db
 *.sqlite3
 .env
 .env.local
+
+# Anteprime generate / Node
+preview-out/
+preview.html
+node_modules/

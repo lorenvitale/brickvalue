@@ -102,3 +102,31 @@ def test_openapi_available(client: TestClient):
     r = client.get("/openapi.json")
     assert r.status_code == 200
     assert "/api/valuate" in r.json()["paths"]
+
+
+def test_quick_endpoint_insurance(client: TestClient):
+    payload = {
+        "goal": "assicurazione",
+        "scope": "unita",
+        "area_sqm": 100,
+        "year_built": 2005,
+        "condition": "buono",
+    }
+    r = client.post("/api/valuate/quick", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["reconstruction_value_new"] is not None
+    assert data["recommended_value"] == data["reconstruction_value_new"]
+
+
+def test_quick_endpoint_validation_422(client: TestClient):
+    # vendita senza prezzo di zona -> errore di validazione
+    r = client.post("/api/valuate/quick", json={"goal": "vendita", "area_sqm": 90})
+    assert r.status_code == 422
+
+
+def test_base_and_full_pages(client: TestClient):
+    for path in ("/", "/base", "/full", "/tecnico"):
+        r = client.get(path)
+        assert r.status_code == 200
+        assert "text/html" in r.headers["content-type"]

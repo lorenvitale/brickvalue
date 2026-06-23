@@ -25,7 +25,13 @@ pronto realizzo**, secondo la prassi estimativa italiana.
 - **Riconciliazione** dei valori con pesi dipendenti dalla finalità della stima.
 - **Valori di sintesi**: valore di mercato, ricostruzione a nuovo, cauzionale,
   pronto realizzo, intervallo di valore (min / più probabile / max).
-- **API REST** (FastAPI) + **interfaccia web** pronta all'uso.
+- **Due interfacce web** (responsive, ottimizzate anche per cellulare):
+  - **Versione base** — guidata dall'obiettivo (es. valore di ricostruzione per la
+    polizza casa), a passi, linguaggio semplice; gestisce *intero fabbricato/
+    condominio* (n° unità) e *singola porzione* (mq).
+  - **Versione tecnico** — per periti: superficie commerciale, tutti i metodi,
+    deprezzamento, report completo, inserimento rapido.
+- **API REST** (FastAPI).
 - **Validazione robusta** degli input (Pydantic v2) e **suite di test** completa.
 
 ---
@@ -74,8 +80,16 @@ python -m brickvalue            # http://127.0.0.1:8000
 python -m brickvalue --port 9000
 ```
 
-- Interfaccia web: <http://127.0.0.1:8000/>
+- Pagina iniziale (scelta versione): <http://127.0.0.1:8000/>
+- Versione base (semplice): <http://127.0.0.1:8000/base>
+- Versione tecnico (full): <http://127.0.0.1:8000/full>
 - Documentazione API (Swagger): <http://127.0.0.1:8000/docs>
+
+### Anteprima offline
+
+```bash
+python tools/make_preview.py            # genera ./preview-out/, apri index.html
+```
 
 ### Valutazione di esempio (CLI)
 
@@ -123,10 +137,11 @@ print(report.recommended_value)          # valore consigliato per la finalità
 
 | Metodo | Endpoint         | Descrizione                                  |
 |--------|------------------|----------------------------------------------|
-| GET    | `/api/health`    | Stato del servizio                           |
-| GET    | `/api/reference` | Tabelle di riferimento (coefficienti, costi) |
-| POST   | `/api/surface`   | Calcolo della sola superficie commerciale    |
-| POST   | `/api/valuate`   | Valutazione completa                         |
+| GET    | `/api/health`        | Stato del servizio                           |
+| GET    | `/api/reference`     | Tabelle di riferimento (coefficienti, costi) |
+| POST   | `/api/surface`       | Calcolo della sola superficie commerciale    |
+| POST   | `/api/valuate`       | Valutazione completa (versione tecnico)      |
+| POST   | `/api/valuate/quick` | Valutazione rapida (versione base)           |
 
 Esempio:
 

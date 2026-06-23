@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>brickvalue — Versione tecnico</title>
+  <link rel="stylesheet" href="/app/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a href="/" class="home-link" title="Home">🧱</a>
+      <div>
+        <h1>brickvalue <span class="badge">tecnico</span></h1>
+        <p class="tagline">Perizia rapida · superficie commerciale · 3 metodi · Ross-Heidecke</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="/base">Versione base</a>
+      <a class="docs-link" href="/docs" target="_blank" rel="noopener">API</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <!-- ===================== FORM ===================== -->
+    <form id="valuation-form" class="panel form">
+      <h2>Dati dell'immobile</h2>
+
+      <fieldset>
+        <legend>Ubicazione</legend>
+        <label>Indirizzo completo
+          <input type="text" name="address" maxlength="200" placeholder="Via, civico, comune" />
+        </label>
+        <div class="grid">
+          <label>Comune
+            <input type="text" name="municipality" maxlength="120" placeholder="opzionale" />
+          </label>
+          <label>Rif. catastale / microzona
+            <input type="text" name="cadastral_ref" maxlength="120" placeholder="opzionale" />
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Caratteristiche</legend>
+        <div class="grid">
+          <label>Tipologia
+            <select name="property_type" id="property_type"></select>
+          </label>
+          <label>Struttura
+            <select name="structure" id="structure"></select>
+          </label>
+          <label>Stato di conservazione
+            <select name="conservation" id="conservation"></select>
+          </label>
+          <label>Classe energetica
+            <select name="energy_class" id="energy_class">
+              <option value="">—</option>
+            </select>
+          </label>
+          <label>Anno di costruzione
+            <input type="number" name="year_built" min="1000" max="2100" placeholder="es. 1995" />
+          </label>
+          <label>Anno ristrutturazione
+            <input type="number" name="year_renovated" min="1000" max="2100" placeholder="opzionale" />
+          </label>
+          <label>Piano
+            <input type="number" name="floor" min="-5" max="200" placeholder="0 = terra" />
+          </label>
+          <label>Piani totali
+            <input type="number" name="total_floors" min="0" max="200" placeholder="opzionale" />
+          </label>
+          <label class="check">
+            <input type="checkbox" name="has_elevator" /> Ascensore
+          </label>
+          <label class="check">
+            <input type="checkbox" name="is_penthouse" /> Attico
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Superfici (m²)</legend>
+        <div id="surface-rows"></div>
+        <button type="button" class="btn-secondary" id="add-surface">+ Aggiungi superficie</button>
+        <label class="wall">Incidenza muri (%)
+          <input type="number" name="wall_incidence_pct" min="0" max="50" step="1" value="0" />
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Finalità della stima</legend>
+        <select name="purpose" id="purpose"></select>
+      </fieldset>
+
+      <fieldset>
+        <legend>Confronto di mercato</legend>
+        <label>Valore unitario di zona (€/m²)
+          <input type="number" name="base_unit_value" min="0" step="10" placeholder="es. 2800 (OMI)" />
+        </label>
+        <p class="hint">Lasciare vuoto se non si vuole usare il confronto di mercato.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Costo / ricostruzione</legend>
+        <div class="grid">
+          <label>Superficie lorda (m²)
+            <input type="number" name="gross_floor_area" min="0" step="1" placeholder="auto" />
+          </label>
+          <label>Costo costruzione (€/m²)
+            <input type="number" name="construction_cost_per_sqm" min="0" step="10" placeholder="auto" />
+          </label>
+          <label>Valore del suolo (€)
+            <input type="number" name="land_value" min="0" step="1000" placeholder="opzionale" />
+          </label>
+          <label>IVA (%)
+            <input type="number" name="vat_pct" min="0" max="30" step="1" placeholder="0" />
+          </label>
+        </div>
+        <p class="hint">In assenza di valori si usano i dati di riferimento per tipologia.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Reddito (capitalizzazione)</legend>
+        <div class="grid">
+          <label>Canone mensile (€)
+            <input type="number" name="monthly_rent" min="0" step="50" placeholder="opzionale" />
+          </label>
+          <label>Saggio di capitalizzazione (%)
+            <input type="number" name="cap_rate" min="0" max="50" step="0.1" placeholder="auto" />
+          </label>
+        </div>
+        <p class="hint">Lasciare vuoto per escludere l'approccio reddituale.</p>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" class="btn-primary" id="submit-btn">Calcola valutazione</button>
+        <button type="button" class="btn-secondary" id="demo-btn">Esempio</button>
+      </div>
+      <p id="form-error" class="error" hidden></p>
+    </form>
+
+    <!-- ===================== REPORT ===================== -->
+    <section id="report" class="panel report" hidden>
+      <div id="report-content"></div>
+    </section>
+    <section id="placeholder" class="panel placeholder">
+      <p>Compila i dati e premi <strong>Calcola valutazione</strong> per ottenere il report.</p>
+      <p class="muted">Oppure premi <strong>Esempio</strong> per precompilare un caso tipico.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>brickvalue · stima indicativa secondo la prassi estimativa italiana · i valori vanno verificati con dati di mercato reali.</p>
+  </footer>
+
+  <script src="/app/render.js"></script>
+  <script src="/app/app.js"></script>
+</body>
+</html>

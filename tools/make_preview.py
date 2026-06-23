@@ -1,11 +1,12 @@
 """Genera un'anteprima HTML autonoma dell'interfaccia brickvalue.
 
-L'anteprima incorpora il CSS e la logica di rendering reale dell'app, piu' un
-report gia' calcolato dal motore: si apre nel browser senza server ne' API.
+Produce un bundle di pagine (landing, versione base, versione tecnico) navigabili
+offline nel browser: CSS e JS sono incorporati e le chiamate API sono simulate da
+report reali calcolati dal motore. Apri ``index.html`` del bundle.
 
 Uso::
 
-    python tools/make_preview.py [output.html]
+    python tools/make_preview.py [cartella_output]
 """
 
 from __future__ import annotations
@@ -31,14 +32,15 @@ from brickvalue.domain.inputs import (  # noqa: E402
     ValuationRequest,
 )
 from brickvalue.domain.property import PropertyInput  # noqa: E402
+from brickvalue.domain.quick import BuildingScope, QuickGoal, QuickValuationRequest  # noqa: E402
 from brickvalue.domain.surface import SurfaceComponent, SurfaceInput  # noqa: E402
+from brickvalue.engine.quick import quick_valuate  # noqa: E402
 from brickvalue.engine.valuator import valuate  # noqa: E402
 
 FRONTEND = ROOT / "frontend"
 
 
-def demo_report() -> dict:
-    """Report di esempio (appartamento, finalita' commerciale, 3 metodi)."""
+def full_report() -> dict:
     request = ValuationRequest(
         property=PropertyInput(
             property_type=PropertyType.APARTMENT,
@@ -66,50 +68,105 @@ def demo_report() -> dict:
     return valuate(request).model_dump(mode="json")
 
 
-def build_preview() -> str:
-    index = (FRONTEND / "index.html").read_text(encoding="utf-8")
-    styles = (FRONTEND / "styles.css").read_text(encoding="utf-8")
-    render_js = (FRONTEND / "render.js").read_text(encoding="utf-8")
-    app_js = (FRONTEND / "app.js").read_text(encoding="utf-8")
-    report = demo_report()
+def quick_report() -> dict:
+    q = QuickValuationRequest(
+        goal=QuickGoal.INSURANCE,
+        scope=BuildingScope.UNIT,
+        area_sqm=100.0,
+        year_built=2005,
+    )
+    return quick_valuate(q).model_dump(mode="json")
 
-    # CSS inline al posto del link
-    index = index.replace(
+
+def _inline_css(html: str) -> str:
+    styles = (FRONTEND / "styles.css").read_text(encoding="utf-8")
+    return html.replace(
         '<link rel="stylesheet" href="/app/styles.css" />',
         f"<style>\n{styles}\n</style>",
     )
 
-    # Script inline + bootstrap dell'anteprima (riempie il form e mostra il report)
-    bootstrap = (
-        "<script>\n" + render_js + "\n</script>\n"
-        "<script>\n" + app_js + "\n</script>\n"
-        "<script>\n"
-        "const PREVIEW_REPORT = " + json.dumps(report, ensure_ascii=False) + ";\n"
-        "window.addEventListener('load', () => {\n"
-        "  try { loadDemo(); } catch (e) { console.error(e); }\n"
-        "  try { renderReport(PREVIEW_REPORT); } catch (e) { console.error(e); }\n"
-        "});\n"
-        "</script>"
-    )
-    index = index.replace(
-        '<script src="/app/render.js"></script>\n  <script src="/app/app.js"></script>',
-        bootstrap,
+
+def _relink(html: str) -> str:
+    return (
+        html.replace('href="/base"', 'href="base.html"')
+        .replace('href="/full"', 'href="full.html"')
+        .replace('href="/tecnico"', 'href="full.html"')
+        .replace('href="/"', 'href="index.html"')
+        .replace('href="/docs"', 'href="#"')
     )
 
-    banner = (
+
+def _script(name: str, relink: bool = False) -> str:
+    code = (FRONTEND / name).read_text(encoding="utf-8")
+    if relink:
+        code = code.replace('"/full"', '"full.html"')
+    return code
+
+
+def _stub(full: dict, quick: dict) -> str:
+    return (
+        "<script>\n"
+        "const __FULL__ = " + json.dumps(full, ensure_ascii=False) + ";\n"
+        "const __QUICK__ = " + json.dumps(quick, ensure_ascii=False) + ";\n"
+        "const __of = window.fetch ? window.fetch.bind(window) : null;\n"
+        "window.fetch = (url, opts) => {\n"
+        "  const u = String(url);\n"
+        "  if (u.includes('/api/valuate/quick')) return Promise.resolve({ ok:true, json:()=>Promise.resolve(__QUICK__) });\n"
+        "  if (u.includes('/api/valuate')) return Promise.resolve({ ok:true, json:()=>Promise.resolve(__FULL__) });\n"
+        "  return __of ? __of(url, opts) : Promise.reject(new Error('offline'));\n"
+        "};\n"
+        "</script>"
+    )
+
+
+def _banner() -> str:
+    return (
         '<div style="background:#fffbeb;color:#78350f;text-align:center;'
         'padding:8px;font-size:12.5px;border-bottom:1px solid #fde68a">'
-        "Anteprima statica generata da dati di esempio — l'app reale è interattiva "
+        "Anteprima statica · dati di esempio · l'app reale è interattiva "
         "(<code>python -m brickvalue</code>).</div>"
     )
-    index = index.replace("<body>", "<body>\n  " + banner)
-    return index
+
+
+def build_landing() -> str:
+    html = _relink(_inline_css((FRONTEND / "index.html").read_text(encoding="utf-8")))
+    return html.replace("<body class=\"landing\">", "<body class=\"landing\">\n  " + _banner())
+
+
+def build_base(full: dict, quick: dict) -> str:
+    html = _relink(_inline_css((FRONTEND / "base.html").read_text(encoding="utf-8")))
+    scripts = _stub(full, quick) + "\n<script>\n" + _script("base.js", relink=True) + "\n</script>"
+    html = html.replace('<script src="/app/base.js"></script>', scripts)
+    return html.replace('<body class="base">', '<body class="base">\n  ' + _banner())
+
+
+def build_full(full: dict, quick: dict) -> str:
+    html = _relink(_inline_css((FRONTEND / "full.html").read_text(encoding="utf-8")))
+    scripts = (
+        _stub(full, quick)
+        + "\n<script>\n" + _script("render.js") + "\n</script>"
+        + "\n<script>\n" + _script("app.js") + "\n</script>"
+        + "\n<script>window.addEventListener('load', () => { try { loadDemo(); } catch (e) {} });</script>"
+    )
+    html = html.replace(
+        '<script src="/app/render.js"></script>\n  <script src="/app/app.js"></script>',
+        scripts,
+    )
+    return html.replace("<body>", "<body>\n  " + _banner(), 1)
 
 
 def main() -> int:
-    out = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "preview.html"
-    out.write_text(build_preview(), encoding="utf-8")
-    print(f"Anteprima scritta in: {out}")
+    out_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "preview-out"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    full = full_report()
+    quick = quick_report()
+
+    (out_dir / "index.html").write_text(build_landing(), encoding="utf-8")
+    (out_dir / "base.html").write_text(build_base(full, quick), encoding="utf-8")
+    (out_dir / "full.html").write_text(build_full(full, quick), encoding="utf-8")
+
+    print(f"Anteprima scritta in: {out_dir} (apri index.html)")
     return 0
 
 

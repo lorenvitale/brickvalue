@@ -6,137 +6,46 @@
   <title>brickvalue — Valutazione immobiliare</title>
   <link rel="stylesheet" href="/app/styles.css" />
 </head>
-<body>
+<body class="landing">
   <header class="topbar">
     <div class="brand">
       <span class="logo">🧱</span>
       <div>
         <h1>brickvalue</h1>
-        <p class="tagline">Valutazione immobili · commerciale · ricostruzione · bancario · assicurativo</p>
+        <p class="tagline">Quanto vale, quanto costa ricostruirlo, quanto per la banca</p>
       </div>
     </div>
-    <a class="docs-link" href="/docs" target="_blank" rel="noopener">API docs</a>
+    <a class="docs-link" href="/docs" target="_blank" rel="noopener">API</a>
   </header>
 
-  <main class="layout">
-    <!-- ===================== FORM ===================== -->
-    <form id="valuation-form" class="panel form">
-      <h2>Dati dell'immobile</h2>
+  <main class="hero">
+    <h2 class="hero-title">Valuta il tuo immobile</h2>
+    <p class="hero-sub">Scegli come vuoi procedere</p>
 
-      <fieldset>
-        <legend>Caratteristiche</legend>
-        <div class="grid">
-          <label>Tipologia
-            <select name="property_type" id="property_type"></select>
-          </label>
-          <label>Struttura
-            <select name="structure" id="structure"></select>
-          </label>
-          <label>Stato di conservazione
-            <select name="conservation" id="conservation"></select>
-          </label>
-          <label>Classe energetica
-            <select name="energy_class" id="energy_class">
-              <option value="">—</option>
-            </select>
-          </label>
-          <label>Anno di costruzione
-            <input type="number" name="year_built" min="1000" max="2100" placeholder="es. 1995" />
-          </label>
-          <label>Anno ristrutturazione
-            <input type="number" name="year_renovated" min="1000" max="2100" placeholder="opzionale" />
-          </label>
-          <label>Piano
-            <input type="number" name="floor" min="-5" max="200" placeholder="0 = terra" />
-          </label>
-          <label>Piani totali
-            <input type="number" name="total_floors" min="0" max="200" placeholder="opzionale" />
-          </label>
-          <label class="check">
-            <input type="checkbox" name="has_elevator" /> Ascensore
-          </label>
-          <label class="check">
-            <input type="checkbox" name="is_penthouse" /> Attico
-          </label>
-        </div>
-      </fieldset>
+    <div class="choices">
+      <a class="choice choice-base" href="/base">
+        <div class="choice-icon">🏠</div>
+        <h3>Versione semplice</h3>
+        <p>Per tutti. Rispondi a poche domande e ottieni subito il valore che ti serve —
+           ad esempio quanto vale ricostruire casa per fare la <strong>polizza</strong>.</p>
+        <span class="choice-cta">Inizia &rarr;</span>
+      </a>
 
-      <fieldset>
-        <legend>Superfici (m²)</legend>
-        <div id="surface-rows"></div>
-        <button type="button" class="btn-secondary" id="add-surface">+ Aggiungi superficie</button>
-        <label class="wall">Incidenza muri (%)
-          <input type="number" name="wall_incidence_pct" min="0" max="50" step="1" value="0" />
-        </label>
-      </fieldset>
+      <a class="choice choice-full" href="/full">
+        <div class="choice-icon">📐</div>
+        <h3>Versione tecnico</h3>
+        <p>Per periti e professionisti. Superficie commerciale, tre metodi di stima,
+           deprezzamento Ross-Heidecke e report completo.</p>
+        <span class="choice-cta">Apri lo strumento &rarr;</span>
+      </a>
+    </div>
 
-      <fieldset>
-        <legend>Finalità della stima</legend>
-        <select name="purpose" id="purpose"></select>
-      </fieldset>
-
-      <fieldset>
-        <legend>Confronto di mercato</legend>
-        <label>Valore unitario di zona (€/m²)
-          <input type="number" name="base_unit_value" min="0" step="10" placeholder="es. 2800 (OMI)" />
-        </label>
-        <p class="hint">Lasciare vuoto se non si vuole usare il confronto di mercato.</p>
-      </fieldset>
-
-      <fieldset>
-        <legend>Costo / ricostruzione</legend>
-        <div class="grid">
-          <label>Superficie lorda (m²)
-            <input type="number" name="gross_floor_area" min="0" step="1" placeholder="auto" />
-          </label>
-          <label>Costo costruzione (€/m²)
-            <input type="number" name="construction_cost_per_sqm" min="0" step="10" placeholder="auto" />
-          </label>
-          <label>Valore del suolo (€)
-            <input type="number" name="land_value" min="0" step="1000" placeholder="opzionale" />
-          </label>
-          <label>IVA (%)
-            <input type="number" name="vat_pct" min="0" max="30" step="1" placeholder="0" />
-          </label>
-        </div>
-        <p class="hint">In assenza di valori si usano i dati di riferimento per tipologia.</p>
-      </fieldset>
-
-      <fieldset>
-        <legend>Reddito (capitalizzazione)</legend>
-        <div class="grid">
-          <label>Canone mensile (€)
-            <input type="number" name="monthly_rent" min="0" step="50" placeholder="opzionale" />
-          </label>
-          <label>Saggio di capitalizzazione (%)
-            <input type="number" name="cap_rate" min="0" max="50" step="0.1" placeholder="auto" />
-          </label>
-        </div>
-        <p class="hint">Lasciare vuoto per escludere l'approccio reddituale.</p>
-      </fieldset>
-
-      <div class="actions">
-        <button type="submit" class="btn-primary" id="submit-btn">Calcola valutazione</button>
-        <button type="button" class="btn-secondary" id="demo-btn">Esempio</button>
-      </div>
-      <p id="form-error" class="error" hidden></p>
-    </form>
-
-    <!-- ===================== REPORT ===================== -->
-    <section id="report" class="panel report" hidden>
-      <div id="report-content"></div>
-    </section>
-    <section id="placeholder" class="panel placeholder">
-      <p>Compila i dati e premi <strong>Calcola valutazione</strong> per ottenere il report.</p>
-      <p class="muted">Oppure premi <strong>Esempio</strong> per precompilare un caso tipico.</p>
-    </section>
+    <p class="hero-note">Stima indicativa secondo la prassi estimativa italiana ·
+      valore commerciale · valore di ricostruzione a nuovo · uso bancario e assicurativo.</p>
   </main>
 
   <footer class="footer">
-    <p>brickvalue · stima indicativa secondo la prassi estimativa italiana · i valori vanno verificati con dati di mercato reali.</p>
+    <p>brickvalue · i valori vanno verificati con dati di mercato reali.</p>
   </footer>
-
-  <script src="/app/render.js"></script>
-  <script src="/app/app.js"></script>
 </body>
 </html>
