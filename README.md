@@ -22,6 +22,10 @@ pronto realizzo**, secondo la prassi estimativa italiana.
   - **Capitalizzazione del reddito** (Income Approach) — reddito operativo netto
     diviso per il saggio di capitalizzazione.
 - **Deprezzamento Ross-Heidecke** (vetustà + stato di manutenzione).
+- **Parametri dedotti dall'indirizzo (Google Maps)** — da un indirizzo il sistema
+  ricava da solo il valore di zona (€/m²), il saggio di capitalizzazione e il costo
+  di costruzione regionale; con le coordinate stima la **centralità** (distanza dal
+  centro città). Funziona anche senza chiave API grazie a un dataset di riferimento.
 - **Riconciliazione** dei valori con pesi dipendenti dalla finalità della stima.
 - **Valori di sintesi**: valore di mercato, ricostruzione a nuovo, cauzionale,
   pronto realizzo, intervallo di valore (min / più probabile / max).
@@ -140,8 +144,22 @@ print(report.recommended_value)          # valore consigliato per la finalità
 | GET    | `/api/health`        | Stato del servizio                           |
 | GET    | `/api/reference`     | Tabelle di riferimento (coefficienti, costi) |
 | POST   | `/api/surface`       | Calcolo della sola superficie commerciale    |
+| POST   | `/api/geocode`       | Indirizzo → localizzazione + parametri dedotti |
 | POST   | `/api/valuate`       | Valutazione completa (versione tecnico)      |
 | POST   | `/api/valuate/quick` | Valutazione rapida (versione base)           |
+
+### Google Maps (parametri automatici)
+
+Imposta la chiave per la geocodifica precisa (coordinate → centralità):
+
+```bash
+export GOOGLE_MAPS_API_KEY="la-tua-chiave"
+```
+
+Senza chiave il sistema riconosce comunque il comune dall'indirizzo e usa il
+dataset di riferimento (`backend/brickvalue/data/market_reference.py`). Quando
+una richiesta contiene un indirizzo e non specifica il valore di zona, questo
+viene dedotto automaticamente (campo `geo` nel report).
 
 Esempio:
 

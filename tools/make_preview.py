@@ -31,13 +31,14 @@ from brickvalue.domain.inputs import (  # noqa: E402
     MarketInput,
     ValuationRequest,
 )
-from brickvalue.domain.property import PropertyInput  # noqa: E402
+from brickvalue.domain.property import Location, PropertyInput  # noqa: E402
 from brickvalue.domain.quick import BuildingScope, QuickGoal, QuickValuationRequest  # noqa: E402
 from brickvalue.domain.surface import SurfaceComponent, SurfaceInput  # noqa: E402
-from brickvalue.engine.quick import quick_valuate  # noqa: E402
-from brickvalue.engine.valuator import valuate  # noqa: E402
+from brickvalue.engine.autofill import lookup_address, run_quick, run_valuation  # noqa: E402
 
 FRONTEND = ROOT / "frontend"
+
+DEMO_ADDRESS = "Via Dante 1, Milano"
 
 
 def full_report() -> dict:
@@ -51,6 +52,7 @@ def full_report() -> dict:
             floor=3,
             total_floors=5,
             has_elevator=True,
+            location=Location(address=DEMO_ADDRESS),
         ),
         surface=SurfaceInput(
             components=[
@@ -60,12 +62,11 @@ def full_report() -> dict:
             ]
         ),
         purpose=ValuationPurpose.MARKET,
-        market=MarketInput(base_unit_value=2800.0),
         cost=CostInput(land_value=60000.0),
         income=IncomeInput(monthly_rent=1100.0),
         reference_year=2026,
     )
-    return valuate(request).model_dump(mode="json")
+    return run_valuation(request).model_dump(mode="json")
 
 
 def quick_report() -> dict:
@@ -74,8 +75,13 @@ def quick_report() -> dict:
         scope=BuildingScope.UNIT,
         area_sqm=100.0,
         year_built=2005,
+        address=DEMO_ADDRESS,
     )
-    return quick_valuate(q).model_dump(mode="json")
+    return run_quick(q).model_dump(mode="json")
+
+
+def geocode_demo() -> dict:
+    return lookup_address(DEMO_ADDRESS, PropertyType.APARTMENT).model_dump(mode="json")
 
 
 def _inline_css(html: str) -> str:
@@ -103,14 +109,16 @@ def _script(name: str, relink: bool = False) -> str:
     return code
 
 
-def _stub(full: dict, quick: dict) -> str:
+def _stub(full: dict, quick: dict, geo: dict) -> str:
     return (
         "<script>\n"
         "const __FULL__ = " + json.dumps(full, ensure_ascii=False) + ";\n"
         "const __QUICK__ = " + json.dumps(quick, ensure_ascii=False) + ";\n"
+        "const __GEO__ = " + json.dumps(geo, ensure_ascii=False) + ";\n"
         "const __of = window.fetch ? window.fetch.bind(window) : null;\n"
         "window.fetch = (url, opts) => {\n"
         "  const u = String(url);\n"
+        "  if (u.includes('/api/geocode')) return Promise.resolve({ ok:true, json:()=>Promise.resolve(__GEO__) });\n"
         "  if (u.includes('/api/valuate/quick')) return Promise.resolve({ ok:true, json:()=>Promise.resolve(__QUICK__) });\n"
         "  if (u.includes('/api/valuate')) return Promise.resolve({ ok:true, json:()=>Promise.resolve(__FULL__) });\n"
         "  return __of ? __of(url, opts) : Promise.reject(new Error('offline'));\n"
@@ -133,17 +141,17 @@ def build_landing() -> str:
     return html.replace("<body class=\"landing\">", "<body class=\"landing\">\n  " + _banner())
 
 
-def build_base(full: dict, quick: dict) -> str:
+def build_base(full: dict, quick: dict, geo: dict) -> str:
     html = _relink(_inline_css((FRONTEND / "base.html").read_text(encoding="utf-8")))
-    scripts = _stub(full, quick) + "\n<script>\n" + _script("base.js", relink=True) + "\n</script>"
+    scripts = _stub(full, quick, geo) + "\n<script>\n" + _script("base.js", relink=True) + "\n</script>"
     html = html.replace('<script src="/app/base.js"></script>', scripts)
     return html.replace('<body class="base">', '<body class="base">\n  ' + _banner())
 
 
-def build_full(full: dict, quick: dict) -> str:
+def build_full(full: dict, quick: dict, geo: dict) -> str:
     html = _relink(_inline_css((FRONTEND / "full.html").read_text(encoding="utf-8")))
     scripts = (
-        _stub(full, quick)
+        _stub(full, quick, geo)
         + "\n<script>\n" + _script("render.js") + "\n</script>"
         + "\n<script>\n" + _script("app.js") + "\n</script>"
         + "\n<script>window.addEventListener('load', () => { try { loadDemo(); } catch (e) {} });</script>"
@@ -161,10 +169,11 @@ def main() -> int:
 
     full = full_report()
     quick = quick_report()
+    geo = geocode_demo()
 
     (out_dir / "index.html").write_text(build_landing(), encoding="utf-8")
-    (out_dir / "base.html").write_text(build_base(full, quick), encoding="utf-8")
-    (out_dir / "full.html").write_text(build_full(full, quick), encoding="utf-8")
+    (out_dir / "base.html").write_text(build_base(full, quick, geo), encoding="utf-8")
+    (out_dir / "full.html").write_text(build_full(full, quick, geo), encoding="utf-8")
 
     print(f"Anteprima scritta in: {out_dir} (apri index.html)")
     return 0

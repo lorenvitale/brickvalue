@@ -176,6 +176,10 @@ class ValuationRequest(BaseModel):
         default=None,
         description="Metodi da eseguire; se assente vengono selezionati automaticamente",
     )
+    auto_parameters: bool = Field(
+        default=True,
+        description="Deduci i parametri mancanti dall'indirizzo (Google Maps / dataset)",
+    )
 
     reference_year: int | None = Field(
         default=None, ge=1900, le=2200, description="Anno di riferimento per il calcolo dell'eta'"

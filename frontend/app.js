@@ -223,10 +223,43 @@ function loadDemo() {
   addSurfaceRow("cantina_soffitta", 8);
 }
 
+async function detectZone() {
+  const form = $("#valuation-form");
+  const note = $("#zone-note");
+  const address = (form.elements["address"].value || "").trim();
+  if (!address) {
+    note.hidden = false;
+    note.textContent = "Inserisci prima l'indirizzo completo.";
+    return;
+  }
+  const btn = $("#detect-zone");
+  btn.disabled = true;
+  note.hidden = false;
+  note.textContent = "Ricerca in corso…";
+  try {
+    const res = await fetch("/api/geocode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address, property_type: form.elements["property_type"].value }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(extractError(data));
+    const p = data.parameters;
+    if (p.base_unit_value != null) form.elements["base_unit_value"].value = p.base_unit_value;
+    const where = p.city || data.location.municipality || data.location.formatted_address || address;
+    note.textContent = `${where}${p.region ? " (" + p.region + ")" : ""} · ~${fmtEur2(p.base_unit_value)}/m² · affidabilità ${p.confidence}`;
+  } catch (e) {
+    note.textContent = "Non è stato possibile dedurre il valore: " + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 /* ============================ Avvio ====================================== */
 document.addEventListener("DOMContentLoaded", () => {
   initForm();
   $("#valuation-form").addEventListener("submit", onSubmit);
   $("#add-surface").addEventListener("click", () => addSurfaceRow());
   $("#demo-btn").addEventListener("click", loadDemo);
+  $("#detect-zone").addEventListener("click", detectZone);
 });

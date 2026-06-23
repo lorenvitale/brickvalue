@@ -46,6 +46,8 @@ function renderReport(r) {
 
   html += renderRange(r.value_range, r.market_value);
 
+  if (r.geo) html += renderGeo(r.geo);
+
   html += `<div class="section"><h3>Superficie commerciale</h3>
     <table><thead><tr><th>Componente</th><th class="num">Area m²</th><th class="num">Coef.</th><th class="num">m² ragguagliati</th></tr></thead><tbody>
     ${r.surface.lines.map((l) => `<tr>
@@ -100,6 +102,23 @@ function renderRange(range, mid) {
 
 function kv(rows) {
   return `<div class="kv">${rows.map(([k, v]) => `<span class="k">${esc(k)}</span><span class="v">${v}</span>`).join("")}</div>`;
+}
+
+function renderGeo(g) {
+  const loc = g.location, p = g.parameters;
+  const src = loc.source === "google" ? "Google Maps"
+    : loc.source === "fallback_testuale" ? "Dataset di riferimento" : "Non riconosciuta";
+  const place = loc.formatted_address ||
+    [loc.municipality, loc.province].filter(Boolean).join(" ") || "—";
+  const rows = [["Fonte", esc(src)], ["Località", esc(place)]];
+  if (p.region) rows.push(["Regione", esc(p.region)]);
+  if (p.distance_to_center_km != null) rows.push(["Distanza dal centro", `${fmtNum(p.distance_to_center_km)} km`]);
+  if (p.centrality_multiplier != null) rows.push(["Centralità", `×${fmtNum(p.centrality_multiplier, 2)}`]);
+  if (p.base_unit_value != null) rows.push(["Valore di zona dedotto", `${fmtEur2(p.base_unit_value)} /m²`]);
+  if (p.cap_rate != null) rows.push(["Saggio dedotto", fmtPct(p.cap_rate)]);
+  rows.push(["Affidabilità", esc(p.confidence)]);
+  return `<div class="section"><h3>📍 Localizzazione e parametri dedotti</h3>${kv(rows)}
+    ${p.notes && p.notes.length ? `<p class="notes">${p.notes.map(esc).join(" · ")}</p>` : ""}</div>`;
 }
 
 function renderMarket(m) {

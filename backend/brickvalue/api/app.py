@@ -9,17 +9,30 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from pydantic import BaseModel, Field
+
 from brickvalue import __version__
 from brickvalue.data import reference
+from brickvalue.domain.enums import PropertyType
+from brickvalue.domain.geo import GeoLookupResult
 from brickvalue.domain.inputs import ValuationRequest
 from brickvalue.domain.quick import QuickValuationRequest
 from brickvalue.domain.results import SurfaceResult, ValuationReport
 from brickvalue.domain.surface import SurfaceInput
-from brickvalue.engine.quick import quick_valuate
+from brickvalue.engine.autofill import lookup_address, run_quick, run_valuation
 from brickvalue.engine.surface import compute_surface
-from brickvalue.engine.valuator import valuate
+from brickvalue.geo.client import is_google_enabled
 
 _FRONTEND_DIR = Path(__file__).resolve().parents[3] / "frontend"
+
+
+class GeocodeRequest(BaseModel):
+    """Corpo della richiesta di geocodifica."""
+
+    address: str = Field(min_length=1, max_length=300, description="Indirizzo da risolvere")
+    property_type: PropertyType | None = Field(
+        default=None, description="Tipologia (per affinare la stima del valore di zona)"
+    )
 
 
 def _reference_payload() -> dict:
@@ -55,7 +68,17 @@ def create_app() -> FastAPI:
 
     @app.get("/api/health", tags=["system"])
     def health() -> dict:
-        return {"status": "ok", "service": "brickvalue", "version": __version__}
+        return {
+            "status": "ok",
+            "service": "brickvalue",
+            "version": __version__,
+            "google_maps": is_google_enabled(),
+        }
+
+    @app.post("/api/geocode", response_model=GeoLookupResult, tags=["geo"])
+    def post_geocode(request: GeocodeRequest) -> GeoLookupResult:
+        """Risolve un indirizzo e deduce i parametri di stima (Google Maps + dataset)."""
+        return lookup_address(request.address, request.property_type)
 
     @app.get("/api/reference", tags=["reference"])
     def get_reference() -> dict:
@@ -68,7 +91,7 @@ def create_app() -> FastAPI:
     @app.post("/api/valuate", response_model=ValuationReport, tags=["valuation"])
     def post_valuate(request: ValuationRequest) -> ValuationReport:
         try:
-            return valuate(request)
+            return run_valuation(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -76,7 +99,7 @@ def create_app() -> FastAPI:
     def post_quick(request: QuickValuationRequest) -> ValuationReport:
         """Valutazione rapida della versione base (input semplificati)."""
         try:
-            return quick_valuate(request)
+            return run_quick(request)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 

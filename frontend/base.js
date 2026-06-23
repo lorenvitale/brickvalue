@@ -251,12 +251,12 @@ function renderDetails() {
 
   let priceField = null;
   if (needsPrice) {
-    priceField = bigInput({ label: "Prezzo medio della zona al m²", min: 1, step: 10, suffix: "€/m²",
-      inputmode: "numeric", value: state.base_unit_value, placeholder: "es. 2500" });
+    priceField = bigInput({ label: "Conosci il prezzo medio al m²? (facoltativo)", min: 1, step: 10,
+      suffix: "€/m²", inputmode: "numeric", value: state.base_unit_value, placeholder: "es. 2500" });
     root.appendChild(priceField);
     const help = document.createElement("p");
     help.className = "wizard-help small";
-    help.textContent = "Lo trovi guardando gli annunci di case simili nella tua zona.";
+    help.textContent = "Se non lo sai, lascia vuoto: lo deduciamo dall'indirizzo.";
     root.appendChild(help);
   }
 
@@ -266,8 +266,10 @@ function renderDetails() {
     state.year_built = y === "" ? null : Number(y);
     if (needsPrice) {
       const price = Number(priceField._input.value);
-      if (!(price > 0)) return setError(root, "Per questo calcolo serve il prezzo medio di zona (€/m²).");
-      state.base_unit_value = price;
+      state.base_unit_value = price > 0 ? price : null;
+      if (!state.base_unit_value && !state.address) {
+        return setError(root, "Per il valore di vendita/mutuo inserisci l'indirizzo oppure il prezzo al m².");
+      }
     }
     go(4);
   };
@@ -348,6 +350,10 @@ async function renderResult() {
   const extras = [
     `<div><span>Superficie considerata</span><strong>${cs.toLocaleString("it-IT")} m²</strong></div>`,
   ];
+  if (report.geo && report.geo.parameters && report.geo.parameters.city) {
+    const g = report.geo.parameters;
+    extras.push(`<div><span>Zona rilevata</span><strong>${esc(g.city)}${g.region ? " (" + esc(g.region) + ")" : ""}</strong></div>`);
+  }
   if (state.goal === "assicurazione") {
     if (report.reconstruction_value_new != null && cs > 0) {
       extras.push(`<div><span>Costo di ricostruzione al m²</span><strong>${fmtEur(report.reconstruction_value_new / cs)} /m²</strong></div>`);

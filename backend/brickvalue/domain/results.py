@@ -11,6 +11,7 @@ from brickvalue.domain.enums import (
     ValuationMethod,
     ValuationPurpose,
 )
+from brickvalue.domain.geo import GeoLookupResult
 
 
 def _utcnow() -> datetime:
@@ -141,6 +142,9 @@ class ValuationReport(BaseModel):
     generated_at: datetime = Field(default_factory=_utcnow)
 
     surface: SurfaceResult
+    geo: GeoLookupResult | None = Field(
+        default=None, description="Localizzazione e parametri dedotti dall'indirizzo"
+    )
     market: MarketResult | None = None
     cost: CostResult | None = None
     income: IncomeResult | None = None

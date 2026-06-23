@@ -98,7 +98,9 @@
         <label>Valore unitario di zona (€/m²)
           <input type="number" name="base_unit_value" min="0" step="10" placeholder="es. 2800 (OMI)" />
         </label>
-        <p class="hint">Lasciare vuoto se non si vuole usare il confronto di mercato.</p>
+        <button type="button" class="btn-secondary" id="detect-zone">📍 Rileva dall'indirizzo</button>
+        <p id="zone-note" class="hint" hidden></p>
+        <p class="hint">Se lasci vuoto e compili l'indirizzo, il valore di zona viene dedotto automaticamente.</p>
       </fieldset>
 
       <fieldset>

@@ -81,9 +81,14 @@ class QuickValuationRequest(BaseModel):
             raise ValueError("Indicare i metri quadri dell'immobile")
         if self.scope == BuildingScope.BUILDING and self.num_units is None:
             raise ValueError("Indicare il numero di unita' immobiliari")
-        if self.goal in (QuickGoal.MARKET, QuickGoal.BANKING) and self.base_unit_value is None:
+        if (
+            self.goal in (QuickGoal.MARKET, QuickGoal.BANKING)
+            and self.base_unit_value is None
+            and not (self.address and self.address.strip())
+        ):
             raise ValueError(
-                "Per il valore di vendita/mutuo indicare il prezzo medio di zona (€/m²)"
+                "Per il valore di vendita/mutuo indicare il prezzo di zona (€/m²) "
+                "oppure l'indirizzo (lo deduciamo noi)"
             )
         if self.total_area > 1_000_000:
             raise ValueError(

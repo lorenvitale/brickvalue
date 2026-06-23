@@ -138,3 +138,34 @@ def test_base_and_full_pages(client: TestClient):
         r = client.get(path)
         assert r.status_code == 200
         assert "text/html" in r.headers["content-type"]
+
+
+def test_geocode_endpoint(client: TestClient):
+    r = client.post("/api/geocode", json={"address": "Via Roma, Milano"})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["location"]["municipality"] == "Milano"
+    assert data["parameters"]["base_unit_value"] == 4900.0
+
+
+def test_valuate_autofills_from_address(client: TestClient):
+    payload = {
+        "property": {
+            "property_type": "appartamento",
+            "location": {"address": "Corso Italia, Napoli"},
+        },
+        "surface": {"components": [{"type": "superficie_principale", "area": 100}]},
+        "purpose": "commerciale",
+    }
+    r = client.post("/api/valuate", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["geo"] is not None
+    assert data["geo"]["parameters"]["city"] == "Napoli"
+    assert data["market"] is not None  # valore di zona dedotto
+    assert data["market_value"] > 0
+
+
+def test_health_reports_google_flag(client: TestClient):
+    r = client.get("/api/health")
+    assert "google_maps" in r.json()
