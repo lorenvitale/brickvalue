@@ -98,6 +98,18 @@ def test_market_requires_source():
         MarketInput()
 
 
+def test_both_sources_uses_comparables_with_note():
+    market = MarketInput(
+        base_unit_value=9999.0,
+        comparables=[Comparable(price=200000, commercial_surface=100, weight=1)],
+    )
+    req, surf = _request(market)
+    res = compute_market(req, surf)
+    assert res.approach == "comparables"
+    assert res.value == pytest.approx(200000.0)  # base_unit_value ignorato
+    assert any("comparabili" in n for n in res.notes)
+
+
 @pytest.mark.parametrize(
     "kwargs,expected",
     [

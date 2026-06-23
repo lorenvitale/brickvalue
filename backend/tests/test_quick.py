@@ -110,3 +110,22 @@ def test_building_requires_units():
 def test_market_requires_base_unit_value():
     with pytest.raises(ValidationError):
         QuickValuationRequest(goal=QuickGoal.MARKET, area_sqm=90.0)
+
+
+def test_total_area_guard():
+    # Edificio irrealisticamente grande -> errore chiaro, non crash
+    with pytest.raises(ValidationError):
+        QuickValuationRequest(
+            goal=QuickGoal.INSURANCE,
+            scope=BuildingScope.BUILDING,
+            num_units=5000,
+            avg_unit_sqm=1000.0,
+        )
+
+
+def test_realistic_large_building_ok():
+    q = QuickValuationRequest(
+        goal=QuickGoal.INSURANCE, scope=BuildingScope.BUILDING, num_units=200, avg_unit_sqm=95.0
+    )
+    report = quick_valuate(q)
+    assert report.surface.commercial_surface == pytest.approx(19000.0)

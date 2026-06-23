@@ -102,7 +102,10 @@ function toggleGroup(options, current, onPick) {
     b.type = "button";
     b.className = "toggle" + (val === current ? " selected" : "");
     b.textContent = label;
-    b.addEventListener("click", () => onPick(val, group));
+    b.addEventListener("click", () => {
+      [...group.children].forEach((c) => c.classList.toggle("selected", c === b));
+      onPick(val);
+    });
     group.appendChild(b);
   });
   return group;
@@ -170,11 +173,7 @@ function renderSize() {
     typeField = toggleGroup(
       [["appartamento", "Appartamento"], ["villa", "Villa"], ["negozio", "Negozio"], ["ufficio", "Ufficio"]],
       state.property_type,
-      (val, group) => {
-        state.property_type = val;
-        [...group.children].forEach((c) => c.classList.remove("selected"));
-        group.querySelector(`button:nth-child(${["appartamento","villa","negozio","ufficio"].indexOf(val)+1})`)?.classList.add("selected");
-      }
+      (val) => { state.property_type = val; }
     );
     tWrap.appendChild(typeField);
     root.appendChild(tWrap);
@@ -197,10 +196,7 @@ function renderSize() {
     const presets = toggleGroup(
       [["60", "Piccole · 60 m²"], ["90", "Medie · 90 m²"], ["120", "Grandi · 120 m²"]],
       String(state.avg_unit_sqm),
-      (val, group) => {
-        state.avg_unit_sqm = Number(val);
-        [...group.children].forEach((c) => c.classList.toggle("selected", c.textContent.includes(val)));
-      }
+      (val) => { state.avg_unit_sqm = Number(val); }
     );
     sizeBlock.appendChild(presets);
     root.appendChild(sizeBlock);
@@ -248,11 +244,7 @@ function renderDetails() {
   const cond = toggleGroup(
     [["come_nuovo", "Come nuovo"], ["buono", "In buono stato"], ["da_sistemare", "Da sistemare"]],
     state.condition,
-    (val, group) => {
-      state.condition = val;
-      [...group.children].forEach((c, i) =>
-        c.classList.toggle("selected", ["come_nuovo", "buono", "da_sistemare"][i] === val));
-    }
+    (val) => { state.condition = val; }
   );
   condBlock.appendChild(cond);
   root.appendChild(condBlock);
@@ -352,6 +344,21 @@ async function renderResult() {
   const value = view.pick(report) ?? report.market_value;
   const cs = report.surface.commercial_surface;
 
+  // Righe di dettaglio adattate all'obiettivo (niente numeri fuorvianti)
+  const extras = [
+    `<div><span>Superficie considerata</span><strong>${cs.toLocaleString("it-IT")} m²</strong></div>`,
+  ];
+  if (state.goal === "assicurazione") {
+    if (report.reconstruction_value_new != null && cs > 0) {
+      extras.push(`<div><span>Costo di ricostruzione al m²</span><strong>${fmtEur(report.reconstruction_value_new / cs)} /m²</strong></div>`);
+    }
+  } else {
+    extras.push(`<div><span>Valore indicativo al m²</span><strong>${fmtEur(report.unit_market_value)} /m²</strong></div>`);
+    if (state.goal === "mutuo") {
+      extras.push(`<div><span>Valore di mercato</span><strong>${fmtEur(report.market_value)}</strong></div>`);
+    }
+  }
+
   const out = document.createElement("div");
   out.className = "wizard-step result-step";
   out.innerHTML = `
@@ -360,28 +367,30 @@ async function renderResult() {
       <p class="result-value">${fmtEur(value)}</p>
       <p class="result-explain">${view.explain}</p>
     </div>
-    <div class="result-extra">
-      <div><span>Superficie considerata</span><strong>${cs.toLocaleString("it-IT")} m²</strong></div>
-      ${report.reconstruction_value_new != null ? `<div><span>Ricostruzione a nuovo</span><strong>${fmtEur(report.reconstruction_value_new)}</strong></div>` : ""}
-      <div><span>Valore di mercato stimato</span><strong>${fmtEur(report.market_value)}</strong></div>
-    </div>
+    <div class="result-extra">${extras.join("")}</div>
     <p class="wizard-help small">Stima indicativa. Per una perizia ufficiale rivolgiti a un tecnico abilitato.</p>
   `;
 
   const nav = document.createElement("div");
   nav.className = "wizard-nav result-nav";
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.className = "btn-back";
+  edit.textContent = "← Modifica dati";
+  edit.addEventListener("click", () => go(3));
   const restart = document.createElement("button");
   restart.type = "button";
   restart.className = "btn-next";
   restart.textContent = "↺ Nuova valutazione";
   restart.addEventListener("click", reset);
-  const tech = document.createElement("a");
-  tech.href = "/full";
-  tech.className = "btn-back";
-  tech.textContent = "Dettaglio tecnico";
-  nav.appendChild(tech);
+  nav.appendChild(edit);
   nav.appendChild(restart);
   out.appendChild(nav);
+
+  const techP = document.createElement("p");
+  techP.className = "result-tech-link";
+  techP.innerHTML = `<a href="/full">Vuoi il dettaglio tecnico completo? →</a>`;
+  out.appendChild(techP);
 
   wizard().innerHTML = "";
   wizard().appendChild(out);

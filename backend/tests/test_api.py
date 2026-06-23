@@ -125,6 +125,14 @@ def test_quick_endpoint_validation_422(client: TestClient):
     assert r.status_code == 422
 
 
+def test_quick_huge_building_is_422_not_500(client: TestClient):
+    r = client.post(
+        "/api/valuate/quick",
+        json={"goal": "assicurazione", "scope": "edificio", "num_units": 5000, "avg_unit_sqm": 1000},
+    )
+    assert r.status_code == 422
+
+
 def test_base_and_full_pages(client: TestClient):
     for path in ("/", "/base", "/full", "/tecnico"):
         r = client.get(path)

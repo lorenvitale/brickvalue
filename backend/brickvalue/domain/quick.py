@@ -85,6 +85,10 @@ class QuickValuationRequest(BaseModel):
             raise ValueError(
                 "Per il valore di vendita/mutuo indicare il prezzo medio di zona (€/m²)"
             )
+        if self.total_area > 1_000_000:
+            raise ValueError(
+                "Valori troppo elevati: controlla il numero di unita' e la dimensione media"
+            )
         return self
 
     @property

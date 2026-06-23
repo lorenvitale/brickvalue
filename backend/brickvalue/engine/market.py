@@ -95,6 +95,8 @@ def compute_market(req: ValuationRequest, surface: SurfaceResult) -> MarketResul
                     "weight": c.weight,
                 }
             )
+        if market.base_unit_value is not None:
+            notes.append("Forniti sia comparabili sia valore unitario: usati i comparabili.")
         # Con i comparables i coefficienti automatici sono esclusi (gia' nei singoli
         # aggiustamenti); restano applicabili gli eventuali extra_coefficients.
         merit, breakdown = _merit(req.property, market, use_auto=False)
