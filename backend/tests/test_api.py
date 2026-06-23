@@ -169,3 +169,16 @@ def test_valuate_autofills_from_address(client: TestClient):
 def test_health_reports_google_flag(client: TestClient):
     r = client.get("/api/health")
     assert "google_maps" in r.json()
+
+
+def test_suggest_endpoint(client: TestClient):
+    r = client.get("/api/geocode/suggest", params={"q": "Mil"})
+    assert r.status_code == 200
+    data = r.json()
+    assert any(s["municipality"] == "Milano" for s in data["suggestions"])
+
+
+def test_suggest_endpoint_empty_query(client: TestClient):
+    r = client.get("/api/geocode/suggest", params={"q": ""})
+    assert r.status_code == 200
+    assert r.json()["suggestions"] == []

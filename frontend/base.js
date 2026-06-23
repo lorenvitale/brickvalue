@@ -230,9 +230,13 @@ function renderDetails() {
   const needsPrice = state.goal === "vendita" || state.goal === "mutuo";
   const root = stepShell("Ancora qualche dettaglio", "Se non sai qualcosa, lascia pure vuoto");
 
-  const addrField = bigInput({ label: "Indirizzo (facoltativo)", type: "text",
+  const addrLabel = needsPrice ? "Indirizzo" : "Indirizzo (facoltativo)";
+  const addrField = bigInput({ label: addrLabel, type: "text",
     value: state.address, placeholder: "Via, civico, comune" });
   root.appendChild(addrField);
+  if (window.attachAutocomplete) {
+    window.attachAutocomplete(addrField._input, (s) => { state.address = s.description; });
+  }
 
   const yearField = bigInput({ label: "Anno di costruzione, circa (facoltativo)", min: 1000, step: 1,
     inputmode: "numeric", value: state.year_built, placeholder: "es. 1990" });

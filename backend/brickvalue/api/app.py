@@ -14,14 +14,14 @@ from pydantic import BaseModel, Field
 from brickvalue import __version__
 from brickvalue.data import reference
 from brickvalue.domain.enums import PropertyType
-from brickvalue.domain.geo import GeoLookupResult
+from brickvalue.domain.geo import GeoLookupResult, SuggestResult
 from brickvalue.domain.inputs import ValuationRequest
 from brickvalue.domain.quick import QuickValuationRequest
 from brickvalue.domain.results import SurfaceResult, ValuationReport
 from brickvalue.domain.surface import SurfaceInput
 from brickvalue.engine.autofill import lookup_address, run_quick, run_valuation
 from brickvalue.engine.surface import compute_surface
-from brickvalue.geo.client import is_google_enabled
+from brickvalue.geo.client import is_google_enabled, suggest_addresses
 
 _FRONTEND_DIR = Path(__file__).resolve().parents[3] / "frontend"
 
@@ -79,6 +79,11 @@ def create_app() -> FastAPI:
     def post_geocode(request: GeocodeRequest) -> GeoLookupResult:
         """Risolve un indirizzo e deduce i parametri di stima (Google Maps + dataset)."""
         return lookup_address(request.address, request.property_type)
+
+    @app.get("/api/geocode/suggest", response_model=SuggestResult, tags=["geo"])
+    def get_suggest(q: str = "", limit: int = 5) -> SuggestResult:
+        """Autocompletamento dell'indirizzo (Google Places, fallback dataset comuni)."""
+        return suggest_addresses(q, limit=limit)
 
     @app.get("/api/reference", tags=["reference"])
     def get_reference() -> dict:

@@ -12,10 +12,11 @@ from __future__ import annotations
 import os
 from typing import Callable
 
-from brickvalue.data.market_reference import CITY_PRICES, find_city_in_text
-from brickvalue.domain.geo import GeoLocation
+from brickvalue.data.market_reference import CITY_PRICES, find_city_in_text, suggest_cities
+from brickvalue.domain.geo import AddressSuggestion, GeoLocation, SuggestResult
 
 GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
+AUTOCOMPLETE_URL = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
 
 Fetcher = Callable[[str, dict, float], dict]
 
@@ -139,3 +140,72 @@ def resolve_location(
             region=ref.region,
         )
     return GeoLocation(query=address, source="sconosciuto")
+
+
+def autocomplete(
+    query: str,
+    *,
+    api_key: str | None = None,
+    timeout: float = 10.0,
+    fetch: Fetcher | None = None,
+    limit: int = 5,
+) -> list[AddressSuggestion]:
+    """Suggerimenti di indirizzo via Google Places. Solleva :class:`GeoError` se non disponibile."""
+    key = api_key or os.environ.get("GOOGLE_MAPS_API_KEY")
+    if not key:
+        raise GeoError("GOOGLE_MAPS_API_KEY non configurata")
+    if not query or not query.strip():
+        return []
+
+    do_fetch = fetch or _default_fetch
+    try:
+        data = do_fetch(
+            AUTOCOMPLETE_URL,
+            {"input": query, "key": key, "language": "it", "components": "country:it"},
+            timeout,
+        )
+    except GeoError:
+        raise
+    except Exception as exc:
+        raise GeoError(f"Errore di rete nell'autocompletamento: {exc}") from exc
+
+    status = data.get("status")
+    if status not in ("OK", "ZERO_RESULTS"):
+        raise GeoError(f"Autocompletamento non riuscito ({status})")
+
+    out: list[AddressSuggestion] = []
+    for pred in data.get("predictions", [])[:limit]:
+        desc = pred.get("description")
+        if desc:
+            out.append(
+                AddressSuggestion(description=desc, place_id=pred.get("place_id"), source="google")
+            )
+    return out
+
+
+def suggest_addresses(
+    query: str,
+    *,
+    api_key: str | None = None,
+    fetch: Fetcher | None = None,
+    limit: int = 5,
+) -> SuggestResult:
+    """Autocompletamento con Google Places, fallback sui comuni del dataset. Non solleva."""
+    limit = max(1, min(10, limit))
+    if api_key or is_google_enabled() or fetch is not None:
+        try:
+            preds = autocomplete(query, api_key=api_key, fetch=fetch, limit=limit)
+            if preds:
+                return SuggestResult(query=query, source="google", suggestions=preds)
+        except GeoError:
+            pass
+
+    suggestions = [
+        AddressSuggestion(description=f"{name} ({ref.province})", municipality=name, source="dataset")
+        for name, ref in suggest_cities(query, limit)
+    ]
+    return SuggestResult(
+        query=query,
+        source="dataset" if suggestions else "nessuna",
+        suggestions=suggestions,
+    )

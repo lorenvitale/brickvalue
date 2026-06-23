@@ -2,6 +2,20 @@
 
 from __future__ import annotations
 
-from brickvalue.geo.client import GeoError, geocode, is_google_enabled, resolve_location
+from brickvalue.geo.client import (
+    GeoError,
+    autocomplete,
+    geocode,
+    is_google_enabled,
+    resolve_location,
+    suggest_addresses,
+)
 
-__all__ = ["GeoError", "geocode", "is_google_enabled", "resolve_location"]
+__all__ = [
+    "GeoError",
+    "autocomplete",
+    "geocode",
+    "is_google_enabled",
+    "resolve_location",
+    "suggest_addresses",
+]

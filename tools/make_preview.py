@@ -35,6 +35,7 @@ from brickvalue.domain.property import Location, PropertyInput  # noqa: E402
 from brickvalue.domain.quick import BuildingScope, QuickGoal, QuickValuationRequest  # noqa: E402
 from brickvalue.domain.surface import SurfaceComponent, SurfaceInput  # noqa: E402
 from brickvalue.engine.autofill import lookup_address, run_quick, run_valuation  # noqa: E402
+from brickvalue.geo.client import suggest_addresses  # noqa: E402
 
 FRONTEND = ROOT / "frontend"
 
@@ -84,6 +85,10 @@ def geocode_demo() -> dict:
     return lookup_address(DEMO_ADDRESS, PropertyType.APARTMENT).model_dump(mode="json")
 
 
+def suggest_demo() -> dict:
+    return suggest_addresses("Mi", limit=6).model_dump(mode="json")
+
+
 def _inline_css(html: str) -> str:
     styles = (FRONTEND / "styles.css").read_text(encoding="utf-8")
     return html.replace(
@@ -109,15 +114,17 @@ def _script(name: str, relink: bool = False) -> str:
     return code
 
 
-def _stub(full: dict, quick: dict, geo: dict) -> str:
+def _stub(full: dict, quick: dict, geo: dict, suggest: dict) -> str:
     return (
         "<script>\n"
         "const __FULL__ = " + json.dumps(full, ensure_ascii=False) + ";\n"
         "const __QUICK__ = " + json.dumps(quick, ensure_ascii=False) + ";\n"
         "const __GEO__ = " + json.dumps(geo, ensure_ascii=False) + ";\n"
+        "const __SUGGEST__ = " + json.dumps(suggest, ensure_ascii=False) + ";\n"
         "const __of = window.fetch ? window.fetch.bind(window) : null;\n"
         "window.fetch = (url, opts) => {\n"
         "  const u = String(url);\n"
+        "  if (u.includes('/api/geocode/suggest')) return Promise.resolve({ ok:true, json:()=>Promise.resolve(__SUGGEST__) });\n"
         "  if (u.includes('/api/geocode')) return Promise.resolve({ ok:true, json:()=>Promise.resolve(__GEO__) });\n"
         "  if (u.includes('/api/valuate/quick')) return Promise.resolve({ ok:true, json:()=>Promise.resolve(__QUICK__) });\n"
         "  if (u.includes('/api/valuate')) return Promise.resolve({ ok:true, json:()=>Promise.resolve(__FULL__) });\n"
@@ -141,23 +148,31 @@ def build_landing() -> str:
     return html.replace("<body class=\"landing\">", "<body class=\"landing\">\n  " + _banner())
 
 
-def build_base(full: dict, quick: dict, geo: dict) -> str:
+def build_base(full: dict, quick: dict, geo: dict, suggest: dict) -> str:
     html = _relink(_inline_css((FRONTEND / "base.html").read_text(encoding="utf-8")))
-    scripts = _stub(full, quick, geo) + "\n<script>\n" + _script("base.js", relink=True) + "\n</script>"
-    html = html.replace('<script src="/app/base.js"></script>', scripts)
+    scripts = (
+        _stub(full, quick, geo, suggest)
+        + "\n<script>\n" + _script("autocomplete.js") + "\n</script>"
+        + "\n<script>\n" + _script("base.js", relink=True) + "\n</script>"
+    )
+    html = html.replace(
+        '<script src="/app/autocomplete.js"></script>\n  <script src="/app/base.js"></script>',
+        scripts,
+    )
     return html.replace('<body class="base">', '<body class="base">\n  ' + _banner())
 
 
-def build_full(full: dict, quick: dict, geo: dict) -> str:
+def build_full(full: dict, quick: dict, geo: dict, suggest: dict) -> str:
     html = _relink(_inline_css((FRONTEND / "full.html").read_text(encoding="utf-8")))
     scripts = (
-        _stub(full, quick, geo)
+        _stub(full, quick, geo, suggest)
         + "\n<script>\n" + _script("render.js") + "\n</script>"
+        + "\n<script>\n" + _script("autocomplete.js") + "\n</script>"
         + "\n<script>\n" + _script("app.js") + "\n</script>"
         + "\n<script>window.addEventListener('load', () => { try { loadDemo(); } catch (e) {} });</script>"
     )
     html = html.replace(
-        '<script src="/app/render.js"></script>\n  <script src="/app/app.js"></script>',
+        '<script src="/app/render.js"></script>\n  <script src="/app/autocomplete.js"></script>\n  <script src="/app/app.js"></script>',
         scripts,
     )
     return html.replace("<body>", "<body>\n  " + _banner(), 1)
@@ -170,10 +185,11 @@ def main() -> int:
     full = full_report()
     quick = quick_report()
     geo = geocode_demo()
+    suggest = suggest_demo()
 
     (out_dir / "index.html").write_text(build_landing(), encoding="utf-8")
-    (out_dir / "base.html").write_text(build_base(full, quick, geo), encoding="utf-8")
-    (out_dir / "full.html").write_text(build_full(full, quick, geo), encoding="utf-8")
+    (out_dir / "base.html").write_text(build_base(full, quick, geo, suggest), encoding="utf-8")
+    (out_dir / "full.html").write_text(build_full(full, quick, geo, suggest), encoding="utf-8")
 
     print(f"Anteprima scritta in: {out_dir} (apri index.html)")
     return 0

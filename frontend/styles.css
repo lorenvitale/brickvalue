@@ -264,6 +264,17 @@ body.base { background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%); }
   display: flex; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid var(--line); font-size: 16px;
 }
 .result-extra > div span { color: var(--ink-soft); }
+/* ===================== Autocompletamento indirizzo ====================== */
+.ac-box { position: relative; display: block; }
+.ac-list {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+  margin: 0; padding: 4px; list-style: none; background: #fff;
+  border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+  max-height: 260px; overflow-y: auto;
+}
+.ac-item { padding: 11px 12px; border-radius: 7px; cursor: pointer; font-size: 15px; color: var(--ink); }
+.ac-item:hover, .ac-item.active { background: #f0fdfa; }
+
 .result-tech-link { text-align: center; margin: 16px 0 0; }
 .result-tech-link a { color: var(--accent); text-decoration: none; font-size: 15px; font-weight: 600; }
 .result-tech-link a:hover { text-decoration: underline; }

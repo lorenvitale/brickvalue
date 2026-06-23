@@ -48,3 +48,20 @@ class GeoLookupResult(BaseModel):
 
     location: GeoLocation
     parameters: InferredParameters
+
+
+class AddressSuggestion(BaseModel):
+    """Un suggerimento di indirizzo per l'autocompletamento."""
+
+    description: str = Field(description="Testo mostrato all'utente")
+    place_id: str | None = Field(default=None, description="Identificativo Google Places")
+    municipality: str | None = None
+    source: str = Field(description="'google' | 'dataset'")
+
+
+class SuggestResult(BaseModel):
+    """Esito dell'autocompletamento di un indirizzo."""
+
+    query: str
+    source: str = Field(description="'google' | 'dataset' | 'nessuna'")
+    suggestions: list[AddressSuggestion] = Field(default_factory=list)

@@ -10,6 +10,7 @@ from brickvalue.data.market_reference import (
     haversine_km,
     normalize,
     resolve_region,
+    suggest_cities,
 )
 from brickvalue.domain.enums import PropertyType, ValuationPurpose
 from brickvalue.domain.geo import GeoLocation
@@ -19,7 +20,13 @@ from brickvalue.domain.quick import BuildingScope, QuickGoal, QuickValuationRequ
 from brickvalue.domain.surface import SurfaceComponent, SurfaceInput
 from brickvalue.engine.autofill import enrich_request, lookup_address, run_quick
 from brickvalue.engine.inference import infer_parameters
-from brickvalue.geo.client import GeoError, geocode, resolve_location
+from brickvalue.geo.client import (
+    GeoError,
+    autocomplete,
+    geocode,
+    resolve_location,
+    suggest_addresses,
+)
 
 
 # --------------------------------------------------------------------------
@@ -207,3 +214,63 @@ def test_lookup_google_centrality(monkeypatch):
     assert res.parameters.centrality_multiplier == 1.30
     assert res.parameters.base_unit_value == pytest.approx(4900 * 1.30)
     assert res.parameters.confidence == "alta"
+
+
+# --------------------------------------------------------------------------
+# Autocompletamento
+# --------------------------------------------------------------------------
+def test_suggest_cities_prefix_and_contains():
+    names = [n for n, _ in suggest_cities("mil", 5)]
+    assert "Milano" in names
+    reggio = [n for n, _ in suggest_cities("reggio", 5)]
+    assert "Reggio Emilia" in reggio and "Reggio Calabria" in reggio
+
+
+def test_suggest_cities_empty():
+    assert suggest_cities("", 5) == []
+
+
+def test_autocomplete_requires_key():
+    with pytest.raises(GeoError):
+        autocomplete("Mil")
+
+
+def _fake_predictions(url, params, timeout):
+    return {
+        "status": "OK",
+        "predictions": [
+            {"description": "Via Roma, Milano MI, Italia", "place_id": "p1"},
+            {"description": "Via Roma, Monza MB, Italia", "place_id": "p2"},
+        ],
+    }
+
+
+def test_autocomplete_parses_predictions():
+    out = autocomplete("Via Roma", api_key="TEST", fetch=_fake_predictions)
+    assert len(out) == 2
+    assert out[0].description.startswith("Via Roma")
+    assert out[0].place_id == "p1"
+    assert out[0].source == "google"
+
+
+def test_autocomplete_limit():
+    out = autocomplete("Via Roma", api_key="TEST", fetch=_fake_predictions, limit=1)
+    assert len(out) == 1
+
+
+def test_suggest_addresses_google():
+    res = suggest_addresses("Via Roma", api_key="TEST", fetch=_fake_predictions)
+    assert res.source == "google"
+    assert len(res.suggestions) == 2
+
+
+def test_suggest_addresses_fallback_dataset():
+    res = suggest_addresses("Tori")  # nessuna chiave -> dataset
+    assert res.source == "dataset"
+    assert any(s.municipality == "Torino" for s in res.suggestions)
+
+
+def test_suggest_addresses_no_match():
+    res = suggest_addresses("zzzqqq")
+    assert res.source == "nessuna"
+    assert res.suggestions == []

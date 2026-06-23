@@ -162,6 +162,28 @@ def find_city_in_text(text: str) -> str | None:
     return None
 
 
+def suggest_cities(query: str, limit: int = 5) -> list[tuple[str, CityRef]]:
+    """Suggerisce comuni dal dataset in base alla digitazione (fallback senza Google).
+
+    Ordina prima le citta' il cui nome inizia con il testo digitato, poi quelle
+    che lo contengono.
+    """
+    nq = normalize(query)
+    if not nq:
+        return []
+    last = nq.split()[-1]
+    prefix: list[tuple[str, CityRef]] = []
+    contains: list[tuple[str, CityRef]] = []
+    for name, ref in CITY_PRICES.items():
+        nc = normalize(name)
+        if nc.startswith(nq) or nc.startswith(last):
+            prefix.append((name, ref))
+        elif nq in nc or (len(last) >= 3 and last in nc):
+            contains.append((name, ref))
+    ordered = prefix + contains
+    return ordered[:limit]
+
+
 def lookup_city(name: str | None) -> tuple[str, CityRef] | None:
     """Restituisce (nome, CityRef) se il comune e' in tabella."""
     if not name:

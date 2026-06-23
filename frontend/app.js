@@ -262,4 +262,8 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#add-surface").addEventListener("click", () => addSurfaceRow());
   $("#demo-btn").addEventListener("click", loadDemo);
   $("#detect-zone").addEventListener("click", detectZone);
+  const addr = document.querySelector('[name="address"]');
+  if (addr && window.attachAutocomplete) {
+    window.attachAutocomplete(addr, () => detectZone());
+  }
 });
