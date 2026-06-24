@@ -9,7 +9,7 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <a href="/" class="home-link" title="Home">🧱</a>
+      <a href="/" class="home-link" title="Home"><svg class="logo-ic"><use href="#i-brick"></use></svg></a>
       <div>
         <h1>brickvalue <span class="badge">tecnico</span></h1>
         <p class="tagline">Perizia rapida · superficie commerciale · 3 metodi · Ross-Heidecke</p>
@@ -98,7 +98,7 @@
         <label>Valore unitario di zona (€/m²)
           <input type="number" name="base_unit_value" min="0" step="10" placeholder="es. 2800 (OMI)" />
         </label>
-        <button type="button" class="btn-secondary" id="detect-zone">📍 Rileva dall'indirizzo</button>
+        <button type="button" class="btn-secondary" id="detect-zone"><svg class="ic"><use href="#i-pin"></use></svg> Rileva dall'indirizzo</button>
         <p id="zone-note" class="hint" hidden></p>
         <p class="hint">Se lasci vuoto e compili l'indirizzo, il valore di zona viene dedotto automaticamente.</p>
       </fieldset>
@@ -156,6 +156,7 @@
     <p>brickvalue · stima indicativa secondo la prassi estimativa italiana · i valori vanno verificati con dati di mercato reali.</p>
   </footer>
 
+  <script src="/app/icons.js"></script>
   <script src="/app/render.js"></script>
   <script src="/app/autocomplete.js"></script>
   <script src="/app/app.js"></script>

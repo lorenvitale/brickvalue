@@ -15,7 +15,7 @@ from brickvalue.data.market_reference import (
     centrality_multiplier,
     construction_multiplier,
     haversine_km,
-    lookup_city,
+    lookup_place,
     region_price,
     resolve_region,
 )
@@ -44,24 +44,29 @@ def infer_parameters(
     """Deduce i parametri di stima dalla localizzazione."""
     notes: list[str] = []
 
-    # 1) Prezzo base di zona e baricentro citta'
+    # 1) Prezzo base di zona e baricentro comune
     city_name: str | None = None
     region: str | None = resolve_region(location.region)
     centroid: tuple[float, float] | None = None
 
-    city_hit = lookup_city(location.municipality)
-    if city_hit is not None:
-        city_name, ref = city_hit
-        base_price = ref.eur_sqm
-        region = ref.region
-        centroid = (ref.lat, ref.lng)
-        notes.append(f"Valore di zona dal riferimento cittadino di {city_name}.")
+    place = lookup_place(location.municipality, location.province)
+    if place is not None:
+        city_name = place.name
+        region = place.region
+        if place.lat is not None and place.lon is not None:
+            centroid = (place.lat, place.lon)
+        if place.eur_sqm is not None:
+            base_price = place.eur_sqm
+            notes.append(f"Valore di zona dal riferimento cittadino di {city_name}.")
+        else:
+            base_price = region_price(place.region) or NATIONAL_DEFAULT_PRICE
+            notes.append(f"Comune {city_name}: usata la media regionale ({region}).")
         confidence = "alta" if location.source == "google" else "media"
     else:
         rp = region_price(location.region)
         if rp is not None:
             base_price = rp
-            notes.append(f"Citta' non in tabella: usata la media regionale ({region}).")
+            notes.append(f"Comune non riconosciuto: usata la media regionale ({region}).")
             confidence = "media" if location.source == "google" else "bassa"
         else:
             base_price = NATIONAL_DEFAULT_PRICE

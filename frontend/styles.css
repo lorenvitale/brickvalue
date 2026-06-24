@@ -19,6 +19,14 @@
 
 * { box-sizing: border-box; }
 
+/* Icone personalizzate (sprite SVG) */
+.ic { width: 1.1em; height: 1.1em; stroke: currentColor; fill: none; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.15em; }
+.ic-lg { width: 28px; height: 28px; stroke-width: 1.7; }
+.ic-xl { width: 46px; height: 46px; stroke-width: 1.5; }
+.logo-ic { width: 34px; height: 34px; stroke: var(--brand-soft); stroke-width: 1.7; fill: none;
+  stroke-linecap: round; stroke-linejoin: round; }
+
 body {
   margin: 0;
   background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
@@ -174,20 +182,26 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--ink); }
 .hero { max-width: 980px; margin: 0 auto; padding: 48px 20px 24px; text-align: center; }
 .hero-title { font-size: clamp(26px, 5vw, 40px); margin: 0 0 6px; }
 .hero-sub { color: var(--ink-soft); font-size: 17px; margin: 0 0 32px; }
-.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
 .choice {
   display: flex; flex-direction: column; align-items: flex-start; text-align: left;
   background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
-  padding: 28px; text-decoration: none; color: var(--ink); box-shadow: var(--shadow);
+  padding: 26px; text-decoration: none; color: var(--ink); box-shadow: var(--shadow);
   transition: transform 0.12s ease, box-shadow 0.12s ease; min-height: 230px;
 }
 .choice:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(15,23,42,0.14); }
-.choice-icon { font-size: 46px; margin-bottom: 12px; }
-.choice h3 { margin: 0 0 8px; font-size: 22px; }
-.choice p { margin: 0 0 18px; color: var(--ink-soft); font-size: 15px; line-height: 1.5; }
+.choice-icon { margin-bottom: 14px; color: var(--brand); display: inline-flex;
+  padding: 12px; border-radius: 14px; background: #fff5ef; }
+.choice-condo .choice-icon { color: var(--accent); background: #ecfdf5; }
+.choice-full .choice-icon { color: #4338ca; background: #eef2ff; }
+.choice h3 { margin: 0 0 8px; font-size: 21px; display: flex; align-items: center; gap: 8px; }
+.choice p { margin: 0 0 18px; color: var(--ink-soft); font-size: 14.5px; line-height: 1.5; }
 .choice-cta { margin-top: auto; font-weight: 700; color: var(--brand); font-size: 16px; }
-.choice-base { border-top: 4px solid var(--accent); }
-.choice-full { border-top: 4px solid var(--brand); }
+.choice-base { border-top: 4px solid var(--brand); }
+.choice-condo { border-top: 4px solid var(--accent); }
+.choice-full { border-top: 4px solid #4338ca; }
+.pill { font-size: 11px; background: var(--accent); color: #fff; padding: 2px 9px;
+  border-radius: 999px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
 .hero-note { color: var(--muted); font-size: 12.5px; margin-top: 32px; }
 
 /* ===================== Wizard (versione base) ============================ */
@@ -212,7 +226,9 @@ body.base { background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%); }
 }
 .opt-card:hover, .opt-card.selected { border-color: var(--accent); background: #f0fdfa; }
 .opt-card:active { transform: scale(0.99); }
-.opt-icon { font-size: 38px; line-height: 1; flex-shrink: 0; }
+.opt-icon { line-height: 1; flex-shrink: 0; color: var(--accent); display: inline-flex;
+  background: #ecfdf5; padding: 10px; border-radius: 12px; }
+.opt-icon svg { width: 28px; height: 28px; }
 .opt-text { display: flex; flex-direction: column; gap: 3px; }
 .opt-text strong { font-size: 19px; }
 .opt-text small { font-size: 14.5px; color: var(--ink-soft); }
@@ -264,6 +280,22 @@ body.base { background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%); }
   display: flex; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid var(--line); font-size: 16px;
 }
 .result-extra > div span { color: var(--ink-soft); }
+/* ===================== Condominio ======================================= */
+.badge-condo { background: var(--accent); }
+.mode-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+.mode-btn { flex: 1; padding: 10px; border: 1px solid var(--line); background: #fff;
+  border-radius: 9px; cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--ink-soft); }
+.mode-btn.selected { border-color: var(--accent); background: #ecfdf5; color: #065f46; }
+.unit-head { display: grid; grid-template-columns: 1fr 70px 70px 32px; gap: 8px;
+  font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px;
+  padding: 0 2px 6px; }
+.unit-row { display: grid; grid-template-columns: 1fr 70px 70px 32px; gap: 8px; margin-bottom: 8px; }
+.unit-row input { font-size: 14px; }
+.unit-row .remove { background: #fee2e2; color: var(--danger); border: none; border-radius: 8px;
+  cursor: pointer; height: 38px; font-size: 16px; }
+.unit-row .remove:hover { background: #fecaca; }
+#add-unit { margin: 2px 0 4px; }
+
 /* ===================== Autocompletamento indirizzo ====================== */
 .ac-box { position: relative; display: block; }
 .ac-list {

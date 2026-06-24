@@ -38,13 +38,26 @@ def test_normalize():
 
 
 def test_find_city_distinguishes_reggio():
-    assert find_city_in_text("Via Roma, Reggio Emilia") == "Reggio Emilia"
-    assert find_city_in_text("Reggio Calabria, lungomare") == "Reggio Calabria"
+    # Riconosce le forme correnti mappandole sui nomi ufficiali ISTAT
+    assert find_city_in_text("Via Roma, Reggio Emilia") == "Reggio nell'Emilia"
+    assert find_city_in_text("Reggio Calabria, lungomare") == "Reggio di Calabria"
 
 
 def test_find_city_word_boundary():
     # "Como" non deve matchare dentro un'altra parola
     assert find_city_in_text("Comodoro 1, Roma") == "Roma"
+
+
+def test_find_small_town():
+    # Il fix principale: anche i piccoli comuni vengono riconosciuti
+    assert find_city_in_text("Via Garibaldi 3, Desenzano del Garda") == "Desenzano del Garda"
+
+
+def test_lookup_place_alias_and_bilingual():
+    from brickvalue.data.market_reference import lookup_place
+    assert lookup_place("Bolzano").region == "Trentino-Alto Adige"
+    assert lookup_place("Reggio Emilia").name == "Reggio nell'Emilia"
+    assert lookup_place("Desenzano del Garda").region == "Lombardia"
 
 
 def test_resolve_region_bilingual():
@@ -220,10 +233,16 @@ def test_lookup_google_centrality(monkeypatch):
 # Autocompletamento
 # --------------------------------------------------------------------------
 def test_suggest_cities_prefix_and_contains():
-    names = [n for n, _ in suggest_cities("mil", 5)]
+    names = [p.name for p in suggest_cities("mil", 8)]
     assert "Milano" in names
-    reggio = [n for n, _ in suggest_cities("reggio", 5)]
-    assert "Reggio Emilia" in reggio and "Reggio Calabria" in reggio
+    reggio = [p.name for p in suggest_cities("reggio", 8)]
+    assert any("Emilia" in n for n in reggio)
+    assert any("Calabria" in n for n in reggio)
+
+
+def test_suggest_cities_small_town():
+    names = [p.name for p in suggest_cities("desenz", 5)]
+    assert "Desenzano del Garda" in names
 
 
 def test_suggest_cities_empty():

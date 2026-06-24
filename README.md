@@ -25,7 +25,11 @@ pronto realizzo**, secondo la prassi estimativa italiana.
 - **Parametri dedotti dall'indirizzo (Google Maps)** — da un indirizzo il sistema
   ricava da solo il valore di zona (€/m²), il saggio di capitalizzazione e il costo
   di costruzione regionale; con le coordinate stima la **centralità** (distanza dal
-  centro città). Funziona anche senza chiave API grazie a un dataset di riferimento.
+  centro comune). **Autocompletamento su tutti i ~7.900 comuni italiani** (dataset
+  vendorizzato), Google Places quando è configurata la chiave.
+- **Condominio (assicuratori)** — valore di ricostruzione a nuovo dell'intero
+  fabbricato (parti comuni, demolizione/sgombero macerie, spese tecniche) con
+  **ripartizione della somma da assicurare per unità** (millesimi o superficie).
 - **Riconciliazione** dei valori con pesi dipendenti dalla finalità della stima.
 - **Valori di sintesi**: valore di mercato, ricostruzione a nuovo, cauzionale,
   pronto realizzo, intervallo di valore (min / più probabile / max).
@@ -145,8 +149,15 @@ print(report.recommended_value)          # valore consigliato per la finalità
 | GET    | `/api/reference`     | Tabelle di riferimento (coefficienti, costi) |
 | POST   | `/api/surface`       | Calcolo della sola superficie commerciale    |
 | POST   | `/api/geocode`       | Indirizzo → localizzazione + parametri dedotti |
+| GET    | `/api/geocode/suggest` | Autocompletamento indirizzo (Places + dataset) |
 | POST   | `/api/valuate`       | Valutazione completa (versione tecnico)      |
 | POST   | `/api/valuate/quick` | Valutazione rapida (versione base)           |
+| POST   | `/api/condominio`    | Ricostruzione a nuovo condominio + ripartizione |
+
+Pagine: `/` (scelta), `/base`, `/condominio`, `/full`.
+
+Il dataset dei comuni è in `backend/brickvalue/data/comuni.json`; per rigenerarlo
+(dev): `pip install italy-geopop pyarrow && python tools/gen_comuni.py`.
 
 ### Google Maps (parametri automatici)
 

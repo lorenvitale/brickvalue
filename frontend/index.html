@@ -9,7 +9,7 @@
 <body class="landing">
   <header class="topbar">
     <div class="brand">
-      <span class="logo">🧱</span>
+      <svg class="logo-ic"><use href="#i-brick"></use></svg>
       <div>
         <h1>brickvalue</h1>
         <p class="tagline">Quanto vale, quanto costa ricostruirlo, quanto per la banca</p>
@@ -24,17 +24,25 @@
 
     <div class="choices">
       <a class="choice choice-base" href="/base">
-        <div class="choice-icon">🏠</div>
+        <div class="choice-icon"><svg class="ic-xl"><use href="#i-home"></use></svg></div>
         <h3>Versione semplice</h3>
         <p>Per tutti. Rispondi a poche domande e ottieni subito il valore che ti serve —
-           ad esempio quanto vale ricostruire casa per fare la <strong>polizza</strong>.</p>
+           ad esempio quanto vale ricostruire casa per la <strong>polizza</strong>.</p>
         <span class="choice-cta">Inizia &rarr;</span>
       </a>
 
+      <a class="choice choice-condo" href="/condominio">
+        <div class="choice-icon"><svg class="ic-xl"><use href="#i-building"></use></svg></div>
+        <h3>Condominio <span class="pill">assicuratori</span></h3>
+        <p>Valore di <strong>ricostruzione a nuovo</strong> dell'intero fabbricato e
+           ripartizione della somma da assicurare per unità (millesimi o superficie).</p>
+        <span class="choice-cta">Apri &rarr;</span>
+      </a>
+
       <a class="choice choice-full" href="/full">
-        <div class="choice-icon">📐</div>
+        <div class="choice-icon"><svg class="ic-xl"><use href="#i-ruler"></use></svg></div>
         <h3>Versione tecnico</h3>
-        <p>Per periti e professionisti. Superficie commerciale, tre metodi di stima,
+        <p>Per periti. Superficie commerciale, tre metodi di stima,
            deprezzamento Ross-Heidecke e report completo.</p>
         <span class="choice-cta">Apri lo strumento &rarr;</span>
       </a>
@@ -47,5 +55,7 @@
   <footer class="footer">
     <p>brickvalue · i valori vanno verificati con dati di mercato reali.</p>
   </footer>
+
+  <script src="/app/icons.js"></script>
 </body>
 </html>

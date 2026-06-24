@@ -182,3 +182,32 @@ def test_suggest_endpoint_empty_query(client: TestClient):
     r = client.get("/api/geocode/suggest", params={"q": ""})
     assert r.status_code == 200
     assert r.json()["suggestions"] == []
+
+
+def test_condominio_endpoint(client: TestClient):
+    payload = {
+        "address": "Via Roma, Milano",
+        "units": [
+            {"label": "Int 1", "surface_sqm": 90, "millesimi": 500},
+            {"label": "Int 2", "surface_sqm": 110, "millesimi": 500},
+        ],
+        "common_area_sqm": 40,
+    }
+    r = client.post("/api/condominio", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["reconstruction_value_new"] > 0
+    assert data["allocation_basis"] == "millesimi"
+    assert len(data["units"]) == 2
+    assert data["region"] == "Lombardia"
+
+
+def test_condominio_validation_422(client: TestClient):
+    r = client.post("/api/condominio", json={})
+    assert r.status_code == 422
+
+
+def test_condominio_page(client: TestClient):
+    r = client.get("/condominio")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]

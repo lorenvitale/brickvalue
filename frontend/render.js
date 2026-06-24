@@ -117,7 +117,8 @@ function renderGeo(g) {
   if (p.base_unit_value != null) rows.push(["Valore di zona dedotto", `${fmtEur2(p.base_unit_value)} /m²`]);
   if (p.cap_rate != null) rows.push(["Saggio dedotto", fmtPct(p.cap_rate)]);
   rows.push(["Affidabilità", esc(p.confidence)]);
-  return `<div class="section"><h3>📍 Localizzazione e parametri dedotti</h3>${kv(rows)}
+  const pin = window.ICON ? window.ICON("i-pin") : "📍";
+  return `<div class="section"><h3>${pin} Localizzazione e parametri dedotti</h3>${kv(rows)}
     ${p.notes && p.notes.length ? `<p class="notes">${p.notes.map(esc).join(" · ")}</p>` : ""}</div>`;
 }
 

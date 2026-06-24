@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 from typing import Callable
 
-from brickvalue.data.market_reference import CITY_PRICES, find_city_in_text, suggest_cities
+from brickvalue.data.market_reference import find_place_in_text, suggest_cities
 from brickvalue.domain.geo import AddressSuggestion, GeoLocation, SuggestResult
 
 GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
@@ -129,15 +129,14 @@ def resolve_location(
         except GeoError:
             pass
 
-    city = find_city_in_text(address or "")
-    if city:
-        ref = CITY_PRICES[city]
+    place = find_place_in_text(address or "")
+    if place:
         return GeoLocation(
             query=address,
             source="fallback_testuale",
-            municipality=city,
-            province=ref.province,
-            region=ref.region,
+            municipality=place.name,
+            province=place.prov,
+            region=place.region,
         )
     return GeoLocation(query=address, source="sconosciuto")
 
@@ -201,8 +200,10 @@ def suggest_addresses(
             pass
 
     suggestions = [
-        AddressSuggestion(description=f"{name} ({ref.province})", municipality=name, source="dataset")
-        for name, ref in suggest_cities(query, limit)
+        AddressSuggestion(
+            description=f"{place.name} ({place.prov})", municipality=place.name, source="dataset"
+        )
+        for place in suggest_cities(query, limit)
     ]
     return SuggestResult(
         query=query,

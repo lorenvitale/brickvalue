@@ -126,13 +126,14 @@ function renderGoal() {
   const root = stepShell("Cosa ti serve?", "Tocca la risposta giusta per te");
   const cards = document.createElement("div");
   cards.className = "opt-cards";
-  cards.appendChild(optionCard("🛡️", "Assicurare la casa",
+  const ic = (n) => (window.ICON ? window.ICON(n, "ic-lg") : "");
+  cards.appendChild(optionCard(ic("i-shield"), "Assicurare la casa",
     "Quanto costa ricostruirla, per la polizza", () => { state.goal = "assicurazione"; go(1); },
     state.goal === "assicurazione"));
-  cards.appendChild(optionCard("🏷️", "Sapere quanto vale",
+  cards.appendChild(optionCard(ic("i-tag"), "Sapere quanto vale",
     "Per vendere o per curiosità", () => { state.goal = "vendita"; go(1); },
     state.goal === "vendita"));
-  cards.appendChild(optionCard("🏦", "Mutuo o banca",
+  cards.appendChild(optionCard(ic("i-bank"), "Mutuo o banca",
     "Valore per la banca", () => { state.goal = "mutuo"; go(1); },
     state.goal === "mutuo"));
   root.appendChild(cards);
@@ -143,10 +144,11 @@ function renderScope() {
   const root = stepShell("Che cosa devi valutare?", "");
   const cards = document.createElement("div");
   cards.className = "opt-cards";
-  cards.appendChild(optionCard("🏠", "Una casa o un locale",
+  const ic = (n) => (window.ICON ? window.ICON(n, "ic-lg") : "");
+  cards.appendChild(optionCard(ic("i-home"), "Una casa o un locale",
     "Un singolo appartamento, negozio o ufficio", () => { state.scope = "unita"; go(2); },
     state.scope === "unita"));
-  cards.appendChild(optionCard("🏢", "Un intero edificio",
+  cards.appendChild(optionCard(ic("i-building"), "Un intero edificio",
     "Un condominio o palazzo con più unità", () => { state.scope = "edificio"; go(2); },
     state.scope === "edificio"));
   root.appendChild(cards);

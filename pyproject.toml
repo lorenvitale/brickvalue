@@ -27,6 +27,9 @@ brickvalue = "brickvalue.__main__:main"
 where = ["backend"]
 include = ["brickvalue*"]
 
+[tool.setuptools.package-data]
+brickvalue = ["data/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
 pythonpath = ["backend"]

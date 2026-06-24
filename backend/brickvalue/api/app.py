@@ -14,12 +14,14 @@ from pydantic import BaseModel, Field
 from brickvalue import __version__
 from brickvalue.data import reference
 from brickvalue.domain.enums import PropertyType
+from brickvalue.domain.condominium import CondominiumReport, CondominiumRequest
 from brickvalue.domain.geo import GeoLookupResult, SuggestResult
 from brickvalue.domain.inputs import ValuationRequest
 from brickvalue.domain.quick import QuickValuationRequest
 from brickvalue.domain.results import SurfaceResult, ValuationReport
 from brickvalue.domain.surface import SurfaceInput
 from brickvalue.engine.autofill import lookup_address, run_quick, run_valuation
+from brickvalue.engine.condominium import compute_condominium
 from brickvalue.engine.surface import compute_surface
 from brickvalue.geo.client import is_google_enabled, suggest_addresses
 
@@ -108,6 +110,14 @@ def create_app() -> FastAPI:
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+    @app.post("/api/condominio", response_model=CondominiumReport, tags=["valuation"])
+    def post_condominio(request: CondominiumRequest) -> CondominiumReport:
+        """Valore di ricostruzione a nuovo di un condominio con ripartizione per unita'."""
+        try:
+            return compute_condominium(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
     # Frontend statico (se presente)
     if _FRONTEND_DIR.is_dir():
         def _page(name: str) -> FileResponse:
@@ -120,6 +130,10 @@ def create_app() -> FastAPI:
         @app.get("/base", include_in_schema=False)
         def base_page() -> FileResponse:
             return _page("base.html")
+
+        @app.get("/condominio", include_in_schema=False)
+        def condo_page() -> FileResponse:
+            return _page("condominio.html")
 
         @app.get("/full", include_in_schema=False)
         @app.get("/tecnico", include_in_schema=False)
