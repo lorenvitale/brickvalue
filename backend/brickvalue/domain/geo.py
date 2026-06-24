@@ -29,6 +29,9 @@ class InferredParameters(BaseModel):
     base_unit_value: float | None = Field(
         default=None, description="Valore unitario di zona dedotto (€/m²)"
     )
+    market_rent_sqm_month: float | None = Field(
+        default=None, description="Canone di mercato stimato (€/m² al mese)"
+    )
     cap_rate: float | None = Field(default=None, description="Saggio di capitalizzazione dedotto")
     construction_cost_multiplier: float = Field(
         default=1.0, description="Moltiplicatore regionale del costo di costruzione"

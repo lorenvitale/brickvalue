@@ -19,6 +19,7 @@ from brickvalue.data.market_reference import (
     region_price,
     resolve_region,
 )
+from brickvalue.data.reference import gross_yield_for
 from brickvalue.domain.enums import PropertyType
 from brickvalue.domain.geo import GeoLocation, InferredParameters
 from brickvalue.utils import round_money
@@ -87,8 +88,10 @@ def infer_parameters(
 
     base_unit_value = round_money(base_price * (centrality or 1.0))
 
-    # 3) Saggio e costo di costruzione
+    # 3) Saggio, canone di mercato e costo di costruzione
     cap_rate = _cap_rate_for_price(base_price)
+    yield_type = property_type or PropertyType.APARTMENT
+    market_rent = round_money(base_unit_value * gross_yield_for(yield_type) / 12.0)
     cost_mult = construction_multiplier(region)
     if abs(cost_mult - 1.0) > 1e-9:
         notes.append(f"Costo di costruzione regionale ({region}): ×{cost_mult:.2f}.")
@@ -101,6 +104,7 @@ def infer_parameters(
 
     return InferredParameters(
         base_unit_value=base_unit_value,
+        market_rent_sqm_month=market_rent,
         cap_rate=cap_rate,
         construction_cost_multiplier=cost_mult,
         centrality_multiplier=centrality,

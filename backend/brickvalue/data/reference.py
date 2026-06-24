@@ -176,3 +176,28 @@ DEFAULT_CAP_RATE: dict[PropertyType, float] = {
 def cap_rate_for(property_type: PropertyType) -> float:
     """Saggio di capitalizzazione di riferimento per tipologia."""
     return DEFAULT_CAP_RATE.get(property_type, 0.045)
+
+
+# ---------------------------------------------------------------------------
+# Rendimento lordo annuo (per stimare il canone di mercato dal valore di zona)
+# ---------------------------------------------------------------------------
+DEFAULT_GROSS_YIELD: dict[PropertyType, float] = {
+    PropertyType.APARTMENT: 0.045,
+    PropertyType.VILLA: 0.035,
+    PropertyType.TOWNHOUSE: 0.040,
+    PropertyType.PENTHOUSE: 0.040,
+    PropertyType.STUDIO: 0.055,
+    PropertyType.OFFICE: 0.060,
+    PropertyType.SHOP: 0.070,
+    PropertyType.WAREHOUSE: 0.075,
+    PropertyType.INDUSTRIAL: 0.080,
+    PropertyType.HOTEL: 0.070,
+    PropertyType.GARAGE: 0.055,
+    PropertyType.PARKING: 0.060,
+    PropertyType.BUILDING: 0.050,
+}
+
+
+def gross_yield_for(property_type: PropertyType) -> float:
+    """Rendimento lordo annuo di riferimento per tipologia."""
+    return DEFAULT_GROSS_YIELD.get(property_type, 0.045)

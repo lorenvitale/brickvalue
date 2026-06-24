@@ -38,12 +38,9 @@ def _select_methods(req: ValuationRequest, warnings: list[str]) -> set[Valuation
             requested.add(_M.MARKET_COMPARISON)
         if can_income:
             requested.add(_M.INCOME)
-        if can_cost and (
-            req.cost is not None
-            or req.purpose in (ValuationPurpose.INSURANCE, ValuationPurpose.TECHNICAL)
-        ):
-            requested.add(_M.COST)
-        if not requested and can_cost:
+        # Il metodo del costo (valore di ricostruzione a nuovo) e' sempre incluso
+        # per i fabbricati: il valore assicurativo e' utile in ogni stima.
+        if can_cost:
             requested.add(_M.COST)
 
     # La finalita' assicurativa/tecnica richiede il metodo del costo

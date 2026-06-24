@@ -115,6 +115,7 @@ function renderGeo(g) {
   if (p.distance_to_center_km != null) rows.push(["Distanza dal centro", `${fmtNum(p.distance_to_center_km)} km`]);
   if (p.centrality_multiplier != null) rows.push(["Centralità", `×${fmtNum(p.centrality_multiplier, 2)}`]);
   if (p.base_unit_value != null) rows.push(["Valore di zona dedotto", `${fmtEur2(p.base_unit_value)} /m²`]);
+  if (p.market_rent_sqm_month != null) rows.push(["Canone di mercato stimato", `${fmtEur2(p.market_rent_sqm_month)} /m²/mese`]);
   if (p.cap_rate != null) rows.push(["Saggio dedotto", fmtPct(p.cap_rate)]);
   rows.push(["Affidabilità", esc(p.confidence)]);
   const pin = window.ICON ? window.ICON("i-pin") : "📍";

@@ -90,6 +90,21 @@ def test_cost_only_fallback_when_no_inputs(apartment, simple_surface):
     assert report.market_value > 0
 
 
+def test_reconstruction_always_computed_for_buildings(apartment, simple_surface):
+    # Anche una stima di solo mercato include il valore di ricostruzione a nuovo
+    from brickvalue.domain.inputs import MarketInput, ValuationRequest
+
+    req = ValuationRequest(
+        property=apartment,
+        surface=simple_surface,
+        market=MarketInput(base_unit_value=3000.0),
+    )
+    report = valuate(req)
+    assert report.market is not None
+    assert report.cost is not None
+    assert report.reconstruction_value_new is not None
+
+
 def test_explicit_methods_selection(full_request):
     full_request.methods = [ValuationMethod.MARKET_COMPARISON]
     report = valuate(full_request)

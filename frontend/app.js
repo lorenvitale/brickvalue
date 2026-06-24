@@ -96,6 +96,16 @@ function numOrNull(name) {
   return Number.isFinite(n) ? n : null;
 }
 
+function mainSurfaceArea() {
+  return [...$("#surface-rows").children].reduce((sum, row) => {
+    if (row.querySelector(".s-type").value === "superficie_principale") {
+      const a = Number(row.querySelector(".s-area").value);
+      if (Number.isFinite(a)) sum += a;
+    }
+    return sum;
+  }, 0);
+}
+
 function buildRequest() {
   const form = $("#valuation-form");
   const get = (n) => form.elements[n];
@@ -246,8 +256,21 @@ async function detectZone() {
     if (!res.ok) throw new Error(extractError(data));
     const p = data.parameters;
     if (p.base_unit_value != null) form.elements["base_unit_value"].value = p.base_unit_value;
+
+    // Automazione: precompila il canone stimato (così parte anche il metodo reddituale)
+    const mainArea = mainSurfaceArea();
+    let rentMsg = "";
+    if (p.market_rent_sqm_month != null && mainArea > 0) {
+      const rentField = form.elements["monthly_rent"];
+      const estTotal = Math.round(p.market_rent_sqm_month * mainArea);
+      if (rentField && rentField.value === "") {
+        rentField.value = estTotal;
+        rentMsg = ` · canone stimato ${fmtEur(estTotal)}/mese`;
+      }
+    }
     const where = p.city || data.location.municipality || data.location.formatted_address || address;
-    note.textContent = `${where}${p.region ? " (" + p.region + ")" : ""} · ~${fmtEur2(p.base_unit_value)}/m² · affidabilità ${p.confidence}`;
+    note.classList.add("ok");
+    note.textContent = `${where}${p.region ? " (" + p.region + ")" : ""} · ~${fmtEur2(p.base_unit_value)}/m² · affidabilità ${p.confidence}${rentMsg}`;
   } catch (e) {
     note.textContent = "Non è stato possibile dedurre il valore: " + e.message;
   } finally {

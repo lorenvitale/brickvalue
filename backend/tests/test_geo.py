@@ -100,6 +100,14 @@ def test_infer_unknown_national_default():
     assert p.confidence == "bassa"
 
 
+def test_infer_market_rent_estimated():
+    loc = GeoLocation(query="Milano", source="fallback_testuale", municipality="Milano",
+                      region="Lombardia")
+    p = infer_parameters(loc, PropertyType.APARTMENT)
+    # 4900 * 0.045 / 12 = 18.375
+    assert p.market_rent_sqm_month == pytest.approx(18.38, abs=0.05)
+
+
 def test_infer_centrality_central_vs_peripheral():
     central = GeoLocation(query="x", source="google", municipality="Milano",
                           region="Lombardia", lat=45.4654, lng=9.1866)
