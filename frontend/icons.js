@@ -28,6 +28,12 @@
     holder.style.display = "none";
     holder.innerHTML = SPRITE;
     document.body.prepend(holder);
+    // Intestazione visibile solo in stampa/PDF
+    const ph = document.createElement("div");
+    ph.className = "print-header";
+    const today = new Date().toLocaleDateString("it-IT");
+    ph.innerHTML = `<strong>brickvalue</strong><span>Valutazione immobiliare · ${today}</span>`;
+    document.body.prepend(ph);
   }
 
   if (document.body) inject();

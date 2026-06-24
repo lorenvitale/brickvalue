@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>brickvalue — Stima massiva</title>
+  <link rel="stylesheet" href="/app/styles.css" />
+</head>
+<body class="batch">
+  <header class="topbar">
+    <div class="brand">
+      <a href="/" class="home-link" title="Home"><svg class="logo-ic"><use href="#i-brick"></use></svg></a>
+      <div>
+        <h1>brickvalue <span class="badge badge-batch">massiva</span></h1>
+        <p class="tagline">Valuta un intero elenco di immobili in un colpo solo</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="/base">Semplice</a>
+      <a href="/condominio">Condominio</a>
+      <a href="/full">Tecnico</a>
+    </nav>
+  </header>
+
+  <main class="batch-wrap">
+    <section class="panel no-print">
+      <h2>Elenco da valutare</h2>
+      <p class="batch-help">Incolla una riga per immobile — colonne separate da <strong>TAB</strong>
+        (incolla da Excel) oppure da <code>;</code>:</p>
+      <p class="batch-cols"><code>indirizzo &nbsp;|&nbsp; mq &nbsp;|&nbsp; tipo (opz.) &nbsp;|&nbsp; finalità (opz.)</code></p>
+      <textarea id="batch-area" rows="9" placeholder="Via Dante 1, Milano	95	appartamento	commerciale&#10;Corso Italia 5, Napoli	120	ufficio	commerciale&#10;Desenzano del Garda	85	appartamento	assicurativo"></textarea>
+      <div class="batch-actions">
+        <button type="button" class="btn-primary" id="run-btn">Valuta elenco</button>
+        <button type="button" class="btn-secondary" id="demo-btn">Esempio</button>
+        <button type="button" class="btn-secondary" id="csv-btn" hidden>⭳ Scarica CSV</button>
+        <button type="button" class="btn-secondary" id="print-btn" hidden>Stampa / PDF</button>
+      </div>
+      <p id="batch-error" class="error" hidden></p>
+    </section>
+
+    <section id="batch-results" class="panel" hidden></section>
+  </main>
+
+  <footer class="footer">
+    <p>brickvalue · stima massiva indicativa · i valori vanno verificati con dati reali.</p>
+  </footer>
+
+  <script src="/app/icons.js"></script>
+  <script src="/app/batch.js"></script>
+</body>
+</html>

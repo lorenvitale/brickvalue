@@ -8,6 +8,7 @@ from brickvalue.engine.autofill import (
     run_quick,
     run_valuation,
 )
+from brickvalue.engine.batch import compute_batch
 from brickvalue.engine.condominium import compute_condominium
 from brickvalue.engine.cost import compute_cost
 from brickvalue.engine.depreciation import compute_depreciation, ross_coefficient
@@ -20,6 +21,7 @@ from brickvalue.engine.surface import compute_surface
 from brickvalue.engine.valuator import valuate
 
 __all__ = [
+    "compute_batch",
     "compute_condominium",
     "compute_cost",
     "compute_depreciation",

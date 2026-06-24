@@ -30,6 +30,47 @@ function addUnitRow(label = "", surface = "", millesimi = "") {
   $("#unit-rows").appendChild(row);
 }
 
+function parsePastedUnits(text) {
+  const num = (s) => {
+    const n = Number(String(s).replace(",", ".").replace(/[^\d.]/g, ""));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+  const units = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const delim = line.includes("\t") ? "\t" : line.includes(";") ? ";" : ",";
+    const cols = line.split(delim).map((c) => c.trim());
+    if (cols.length < 2) continue;
+    let label = cols[0], mq = num(cols[1]), mill = cols.length >= 3 ? num(cols[2]) : null;
+    if (mq == null) {
+      // etichetta su più colonne: cerca il primo numero
+      for (let i = 1; i < cols.length; i++) {
+        const n = num(cols[i]);
+        if (n != null) { mq = n; mill = num(cols[i + 1]); label = cols.slice(0, i).join(" "); break; }
+      }
+    }
+    if (mq != null) units.push({ label, mq, mill });
+  }
+  return units;
+}
+
+function importUnits() {
+  const msg = $("#paste-msg");
+  const units = parsePastedUnits($("#paste-area").value);
+  if (!units.length) {
+    msg.textContent = "Nessuna riga riconosciuta. Usa: descrizione, mq, millesimi.";
+    msg.classList.remove("ok");
+    return;
+  }
+  $("#unit-rows").innerHTML = "";
+  units.forEach((u) => addUnitRow(u.label, u.mq, u.mill || ""));
+  msg.textContent = `Importate ${units.length} unità.`;
+  msg.classList.add("ok");
+  $("#paste-area").value = "";
+  $("#paste-box").hidden = true;
+}
+
 function numOrNull(name) {
   const el = document.querySelector(`[name="${name}"]`);
   if (!el || el.value === "") return null;
@@ -78,7 +119,8 @@ function kv(rows) {
 
 function renderReport(r) {
   const pin = window.ICON ? window.ICON("i-pin") : "📍";
-  let html = `<h2>Ricostruzione a nuovo del condominio</h2>
+  let html = `<div class="report-actions no-print"><button type="button" class="btn-secondary" onclick="window.print()">Stampa / PDF</button></div>
+    <h2>Ricostruzione a nuovo del condominio</h2>
     <p class="subtitle">${r.unit_count} unità · ${fmtNum(r.gross_area)} m² complessivi${r.region ? " · " + esc(r.region) : ""}</p>
     <div class="recommended">
       <div class="rec-label">Valore di ricostruzione a nuovo (totale)</div>
@@ -194,6 +236,8 @@ document.addEventListener("DOMContentLoaded", () => {
   addUnitRow();
   $("#condo-form").addEventListener("submit", onSubmit);
   $("#add-unit").addEventListener("click", () => addUnitRow());
+  $("#paste-toggle").addEventListener("click", () => { $("#paste-box").hidden = !$("#paste-box").hidden; });
+  $("#import-units").addEventListener("click", importUnits);
   $("#demo-btn").addEventListener("click", loadDemo);
   document.querySelectorAll(".mode-btn").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
   const addr = document.querySelector('[name="address"]');

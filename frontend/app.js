@@ -233,6 +233,8 @@ function loadDemo() {
   addSurfaceRow("cantina_soffitta", 8);
 }
 
+let lastDetectedAddress = "";
+
 async function detectZone() {
   const form = $("#valuation-form");
   const note = $("#zone-note");
@@ -271,6 +273,7 @@ async function detectZone() {
     const where = p.city || data.location.municipality || data.location.formatted_address || address;
     note.classList.add("ok");
     note.textContent = `${where}${p.region ? " (" + p.region + ")" : ""} · ~${fmtEur2(p.base_unit_value)}/m² · affidabilità ${p.confidence}${rentMsg}`;
+    lastDetectedAddress = address;
   } catch (e) {
     note.textContent = "Non è stato possibile dedurre il valore: " + e.message;
   } finally {
@@ -286,7 +289,12 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#demo-btn").addEventListener("click", loadDemo);
   $("#detect-zone").addEventListener("click", detectZone);
   const addr = document.querySelector('[name="address"]');
-  if (addr && window.attachAutocomplete) {
-    window.attachAutocomplete(addr, () => detectZone());
+  if (addr) {
+    // Auto-rilevamento: alla scelta di un suggerimento o uscendo dal campo
+    if (window.attachAutocomplete) window.attachAutocomplete(addr, () => detectZone());
+    addr.addEventListener("change", () => {
+      const v = addr.value.trim();
+      if (v && v !== lastDetectedAddress) detectZone();
+    });
   }
 });

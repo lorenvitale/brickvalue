@@ -400,8 +400,9 @@ async function renderResult() {
   out.appendChild(nav);
 
   const techP = document.createElement("p");
-  techP.className = "result-tech-link";
-  techP.innerHTML = `<a href="/full">Vuoi il dettaglio tecnico completo? →</a>`;
+  techP.className = "result-tech-link no-print";
+  techP.innerHTML = `<a href="#" onclick="window.print();return false;">Stampa / salva PDF</a>
+    &nbsp;·&nbsp; <a href="/full">Dettaglio tecnico →</a>`;
   out.appendChild(techP);
 
   wizard().innerHTML = "";

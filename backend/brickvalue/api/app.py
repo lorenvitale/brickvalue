@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from brickvalue import __version__
 from brickvalue.data import reference
 from brickvalue.domain.enums import PropertyType
+from brickvalue.domain.batch import BatchResult, BatchValuationRequest
 from brickvalue.domain.condominium import CondominiumReport, CondominiumRequest
 from brickvalue.domain.geo import GeoLookupResult, SuggestResult
 from brickvalue.domain.inputs import ValuationRequest
@@ -21,6 +22,7 @@ from brickvalue.domain.quick import QuickValuationRequest
 from brickvalue.domain.results import SurfaceResult, ValuationReport
 from brickvalue.domain.surface import SurfaceInput
 from brickvalue.engine.autofill import lookup_address, run_quick, run_valuation
+from brickvalue.engine.batch import compute_batch
 from brickvalue.engine.condominium import compute_condominium
 from brickvalue.engine.surface import compute_surface
 from brickvalue.geo.client import is_google_enabled, suggest_addresses
@@ -118,6 +120,11 @@ def create_app() -> FastAPI:
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+    @app.post("/api/valuate/batch", response_model=BatchResult, tags=["valuation"])
+    def post_batch(request: BatchValuationRequest) -> BatchResult:
+        """Stima massiva di un elenco di immobili (errori isolati per riga)."""
+        return compute_batch(request)
+
     # Frontend statico (se presente)
     if _FRONTEND_DIR.is_dir():
         def _page(name: str) -> FileResponse:
@@ -134,6 +141,10 @@ def create_app() -> FastAPI:
         @app.get("/condominio", include_in_schema=False)
         def condo_page() -> FileResponse:
             return _page("condominio.html")
+
+        @app.get("/batch", include_in_schema=False)
+        def batch_page() -> FileResponse:
+            return _page("batch.html")
 
         @app.get("/full", include_in_schema=False)
         @app.get("/tecnico", include_in_schema=False)

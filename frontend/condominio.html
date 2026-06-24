@@ -77,7 +77,15 @@
             <span>Descrizione</span><span>m²</span><span>Millesimi</span><span></span>
           </div>
           <div id="unit-rows"></div>
-          <button type="button" class="btn-secondary" id="add-unit">+ Aggiungi unità</button>
+          <div class="unit-actions">
+            <button type="button" class="btn-secondary" id="add-unit">+ Aggiungi unità</button>
+            <button type="button" class="btn-secondary" id="paste-toggle">⊞ Incolla da Excel</button>
+          </div>
+          <div id="paste-box" hidden>
+            <textarea id="paste-area" rows="5" placeholder="Una unità per riga — colonne separate da TAB (incolla da Excel) o ';'&#10;Descrizione    mq    millesimi&#10;Scala A Int 1    85    180"></textarea>
+            <button type="button" class="btn-secondary" id="import-units">Importa righe</button>
+            <p id="paste-msg" class="hint"></p>
+          </div>
           <p class="hint">I millesimi sono facoltativi: senza, la ripartizione è per superficie.</p>
         </div>
 

@@ -153,8 +153,10 @@ print(report.recommended_value)          # valore consigliato per la finalità
 | POST   | `/api/valuate`       | Valutazione completa (versione tecnico)      |
 | POST   | `/api/valuate/quick` | Valutazione rapida (versione base)           |
 | POST   | `/api/condominio`    | Ricostruzione a nuovo condominio + ripartizione |
+| POST   | `/api/valuate/batch` | Stima massiva da elenco di immobili          |
 
-Pagine: `/` (scelta), `/base`, `/condominio`, `/full`.
+Pagine: `/` (scelta), `/base`, `/condominio`, `/batch`, `/full`. Ogni report
+ha il pulsante **Stampa / PDF** (`window.print()` + CSS di stampa).
 
 Il dataset dei comuni è in `backend/brickvalue/data/comuni.json`; per rigenerarlo
 (dev): `pip install italy-geopop pyarrow && python tools/gen_comuni.py`.

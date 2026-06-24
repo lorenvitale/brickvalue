@@ -211,3 +211,22 @@ def test_condominio_page(client: TestClient):
     r = client.get("/condominio")
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
+
+
+def test_batch_endpoint(client: TestClient):
+    payload = {"items": [
+        {"address": "Via Roma, Milano", "area_sqm": 90},
+        {"area_sqm": 100, "base_unit_value": 2000},
+    ]}
+    r = client.post("/api/valuate/batch", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["count"] == 2 and data["ok"] == 2
+    assert data["items"][0]["city"] == "Milano"
+    assert data["total_market_value"] > 0
+
+
+def test_batch_page(client: TestClient):
+    r = client.get("/batch")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]

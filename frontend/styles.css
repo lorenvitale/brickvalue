@@ -219,6 +219,9 @@ tr.total td { font-weight: 750; border-top: 2px solid #dde3ec; background: #f8fa
 .choice-icon { margin-bottom: 16px; color: var(--brand); display: inline-flex; padding: 13px; border-radius: var(--r); background: var(--brand-tint); }
 .choice-condo .choice-icon { color: var(--accent); background: var(--accent-tint); }
 .choice-full .choice-icon { color: var(--indigo); background: var(--indigo-tint); }
+.choice-batch .choice-icon { color: #7c3aed; background: #f3e8ff; }
+.choice-batch { border-top: 4px solid #7c3aed; }
+.choice-batch .choice-cta { color: #7c3aed; }
 .choice h3 { margin: 0 0 9px; font-size: 21px; font-weight: 720; display: flex; align-items: center; gap: 9px; }
 .choice p { margin: 0 0 18px; color: var(--ink-soft); font-size: 14.5px; line-height: 1.55; }
 .choice-cta { margin-top: auto; font-weight: 700; color: var(--brand); font-size: 15.5px; }
@@ -319,6 +322,31 @@ body.base { background: radial-gradient(900px 500px at 50% -10%, #e9fbf6 0%, rgb
   color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; padding: 0 2px 6px; }
 .unit-row { display: grid; grid-template-columns: 1fr 70px 70px 34px; gap: 8px; margin-bottom: 8px; }
 .unit-row input { font-size: 14px; }
+.unit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.unit-actions .btn-secondary { flex: 1; }
+#paste-box { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+#paste-area { width: 100%; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px;
+  padding: 10px 12px; border: 1px solid #dde3ec; border-radius: var(--r-sm); resize: vertical; }
+#paste-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
+
+/* Stima massiva */
+.badge-batch { background: var(--indigo); }
+.batch-wrap { max-width: 1180px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 22px; }
+.batch-help { color: var(--ink-soft); font-size: 14px; margin: 0 0 6px; }
+.batch-cols { margin: 0 0 12px; }
+.batch-cols code { background: #f1f5f9; padding: 4px 10px; border-radius: var(--r-sm); font-size: 12.5px; color: var(--ink-soft); }
+#batch-area { width: 100%; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px;
+  padding: 12px 14px; border: 1px solid #dde3ec; border-radius: var(--r); resize: vertical; line-height: 1.6; }
+#batch-area:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,0.15); }
+.batch-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.batch-actions .btn-primary { flex: 0 0 auto; min-width: 180px; background: linear-gradient(180deg, #6366f1, var(--indigo)); box-shadow: 0 4px 14px rgba(79,70,229,0.28); }
+.batch-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.bs { background: #f8fafc; border: 1px solid var(--line); border-radius: var(--r); padding: 13px 15px; }
+.bs span { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; }
+.bs strong { font-size: 19px; font-variant-numeric: tabular-nums; }
+.bs.err strong { color: var(--danger); }
+.table-scroll { overflow-x: auto; }
+.row-error td { background: #fff7ed; color: #9a3412; }
 
 /* Autocompletamento */
 .ac-box { position: relative; display: block; }
@@ -327,6 +355,29 @@ body.base { background: radial-gradient(900px 500px at 50% -10%, #e9fbf6 0%, rgb
   max-height: 270px; overflow-y: auto; }
 .ac-item { padding: 11px 12px; border-radius: var(--r-sm); cursor: pointer; font-size: 14.5px; color: var(--ink); }
 .ac-item:hover, .ac-item.active { background: var(--accent-tint); }
+
+/* Azioni report + intestazione di stampa */
+.report-actions { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.report-actions button { font-size: 12.5px; padding: 7px 12px; }
+.print-header { display: none; align-items: baseline; gap: 12px; padding: 0 0 12px; margin-bottom: 14px;
+  border-bottom: 2px solid var(--brand); }
+.print-header strong { font-size: 18px; color: var(--brand); }
+.print-header span { font-size: 12px; color: var(--ink-soft); }
+
+/* Stampa / PDF */
+@media print {
+  .no-print, .topbar, .footer, .topnav, .actions, .batch-actions, .report-actions,
+  .wizard-nav, .result-nav, .result-tech-link, .progress, #placeholder, form.form,
+  .ac-list, #paste-box, .unit-actions, .docs-link { display: none !important; }
+  body { background: #fff !important; }
+  .layout, .batch-wrap, .wizard-wrap, .hero { display: block !important; padding: 0 !important;
+    max-width: none !important; margin: 0 !important; }
+  .panel { box-shadow: none !important; border: none !important; padding: 6px 0 !important; }
+  .print-header { display: flex !important; }
+  .section, .card, .bs, tr, .recommended, .result-card { break-inside: avoid; }
+  table { font-size: 11px; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
 
 /* Responsive */
 @media (max-width: 700px) {

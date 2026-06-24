@@ -19,6 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
+from brickvalue.domain.batch import BatchItem, BatchValuationRequest  # noqa: E402
 from brickvalue.domain.condominium import CondoUnit, CondominiumRequest  # noqa: E402
 from brickvalue.domain.enums import (  # noqa: E402
     ConservationState,
@@ -32,6 +33,7 @@ from brickvalue.domain.property import Location, PropertyInput  # noqa: E402
 from brickvalue.domain.quick import BuildingScope, QuickGoal, QuickValuationRequest  # noqa: E402
 from brickvalue.domain.surface import SurfaceComponent, SurfaceInput  # noqa: E402
 from brickvalue.engine.autofill import lookup_address, run_quick, run_valuation  # noqa: E402
+from brickvalue.engine.batch import compute_batch  # noqa: E402
 from brickvalue.engine.condominium import compute_condominium  # noqa: E402
 from brickvalue.geo.client import suggest_addresses  # noqa: E402
 
@@ -88,6 +90,19 @@ def condo_report() -> dict:
     return compute_condominium(req).model_dump(mode="json")
 
 
+def batch_report() -> dict:
+    req = BatchValuationRequest(items=[
+        BatchItem(label="Via Dante 1, Milano", address="Via Dante 1, Milano", area_sqm=95),
+        BatchItem(label="Corso Italia 5, Napoli", address="Corso Italia 5, Napoli", area_sqm=120,
+                  property_type=PropertyType.OFFICE),
+        BatchItem(label="Desenzano del Garda", address="Desenzano del Garda", area_sqm=85,
+                  purpose=ValuationPurpose.INSURANCE),
+        BatchItem(label="Via Po, Torino", address="Via Po, Torino", area_sqm=70,
+                  purpose=ValuationPurpose.BANKING),
+    ])
+    return compute_batch(req).model_dump(mode="json")
+
+
 def geocode_demo() -> dict:
     return lookup_address(DEMO_ADDRESS, PropertyType.APARTMENT).model_dump(mode="json")
 
@@ -112,6 +127,7 @@ def _relink(html: str) -> str:
         .replace('href="/full"', 'href="full.html"')
         .replace('href="/tecnico"', 'href="full.html"')
         .replace('href="/condominio"', 'href="condominio.html"')
+        .replace('href="/batch"', 'href="batch.html"')
         .replace('href="/"', 'href="index.html"')
         .replace('href="/docs"', 'href="#"')
     )
@@ -132,6 +148,7 @@ window.fetch = (url, opts) => {{
   if (u.includes('/api/geocode/suggest')) return Promise.resolve({{ ok:true, json:()=>Promise.resolve(__SUGGEST__) }});
   if (u.includes('/api/geocode')) return Promise.resolve({{ ok:true, json:()=>Promise.resolve(__GEO__) }});
   if (u.includes('/api/condominio')) return Promise.resolve({{ ok:true, json:()=>Promise.resolve(__CONDO__) }});
+  if (u.includes('/api/valuate/batch')) return Promise.resolve({{ ok:true, json:()=>Promise.resolve(__BATCH__) }});
   if (u.includes('/api/valuate/quick')) return Promise.resolve({{ ok:true, json:()=>Promise.resolve(__QUICK__) }});
   if (u.includes('/api/valuate')) return Promise.resolve({{ ok:true, json:()=>Promise.resolve(__FULL__) }});
   return __of ? __of(url, opts) : Promise.reject(new Error('offline'));
@@ -172,15 +189,20 @@ def main() -> int:
         "__FULL__": full_report(),
         "__QUICK__": quick_report(),
         "__CONDO__": condo_report(),
+        "__BATCH__": batch_report(),
         "__GEO__": geocode_demo(),
         "__SUGGEST__": suggest_demo(),
     }
     prefill = "<script>window.addEventListener('load',()=>{try{loadDemo();}catch(e){}});</script>"
+    batch_tail = "<script>window.addEventListener('load',()=>{try{loadDemo();run();}catch(e){}});</script>"
 
     (out_dir / "index.html").write_text(build_page("index.html", data, "landing"), encoding="utf-8")
     (out_dir / "base.html").write_text(build_page("base.html", data, "base"), encoding="utf-8")
     (out_dir / "condominio.html").write_text(
         build_page("condominio.html", data, "", prefill), encoding="utf-8"
+    )
+    (out_dir / "batch.html").write_text(
+        build_page("batch.html", data, "batch", batch_tail), encoding="utf-8"
     )
     (out_dir / "full.html").write_text(
         build_page("full.html", data, "", prefill), encoding="utf-8"
