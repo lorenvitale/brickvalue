@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>brickvalue — Condominio (assicuratori)</title>
+  <link rel="stylesheet" href="/app/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a href="/" class="home-link" title="Home"><svg class="logo-ic"><use href="#i-brick"></use></svg></a>
+      <div>
+        <h1>brickvalue <span class="badge badge-condo">condominio</span></h1>
+        <p class="tagline">Valore di ricostruzione a nuovo · ripartizione per unità</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="/base">Semplice</a>
+      <a href="/full">Tecnico</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <form id="condo-form" class="panel form">
+      <h2>Dati del fabbricato</h2>
+
+      <fieldset>
+        <legend>Ubicazione</legend>
+        <label>Indirizzo del condominio
+          <input type="text" name="address" maxlength="200" placeholder="Via, civico, comune" />
+        </label>
+        <p class="hint">Da qui deduciamo il costo di costruzione regionale.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Caratteristiche</legend>
+        <div class="grid">
+          <label>Struttura
+            <select name="structure" id="structure"></select>
+          </label>
+          <label>Anno di costruzione
+            <input type="number" name="year_built" min="1000" max="2100" placeholder="opzionale" />
+          </label>
+          <label>Costo ricostruzione (€/m²)
+            <input type="number" name="construction_cost_per_sqm" min="0" step="10" placeholder="auto" />
+          </label>
+          <label>Parti comuni (m²)
+            <input type="number" name="common_area_sqm" min="0" step="1" placeholder="0" />
+          </label>
+        </div>
+        <div class="grid">
+          <label>Spese tecniche (%)
+            <input type="number" name="technical_fees_pct" min="0" max="50" step="1" value="10" />
+          </label>
+          <label>Spese generali e utile (%)
+            <input type="number" name="overhead_profit_pct" min="0" max="60" step="1" value="12" />
+          </label>
+          <label>Demolizione/sgombero (%)
+            <input type="number" name="demolition_pct" min="0" max="40" step="1" value="8" />
+          </label>
+          <label>IVA (%)
+            <input type="number" name="vat_pct" min="0" max="30" step="1" value="0" />
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Unità immobiliari</legend>
+        <div class="mode-toggle">
+          <button type="button" class="mode-btn selected" data-mode="detailed">Dettaglio unità</button>
+          <button type="button" class="mode-btn" data-mode="aggregate">Aggregato</button>
+        </div>
+
+        <div id="mode-detailed">
+          <div class="unit-head">
+            <span>Descrizione</span><span>m²</span><span>Millesimi</span><span></span>
+          </div>
+          <div id="unit-rows"></div>
+          <div class="unit-actions">
+            <button type="button" class="btn-secondary" id="add-unit">+ Aggiungi unità</button>
+            <button type="button" class="btn-secondary" id="paste-toggle">⊞ Incolla da Excel</button>
+          </div>
+          <div id="paste-box" hidden>
+            <textarea id="paste-area" rows="5" placeholder="Una unità per riga — colonne separate da TAB (incolla da Excel) o ';'&#10;Descrizione    mq    millesimi&#10;Scala A Int 1    85    180"></textarea>
+            <button type="button" class="btn-secondary" id="import-units">Importa righe</button>
+            <p id="paste-msg" class="hint"></p>
+          </div>
+          <p class="hint">I millesimi sono facoltativi: senza, la ripartizione è per superficie.</p>
+        </div>
+
+        <div id="mode-aggregate" hidden>
+          <div class="grid">
+            <label>Superficie residenziale totale (m²)
+              <input type="number" name="total_area_sqm" min="0" step="1" placeholder="es. 1200" />
+            </label>
+            <label>Numero di unità
+              <input type="number" name="num_units" min="1" step="1" placeholder="es. 12" />
+            </label>
+          </div>
+          <p class="hint">Ripartizione per quote uguali.</p>
+        </div>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" class="btn-primary" id="submit-btn">Calcola ricostruzione</button>
+        <button type="button" class="btn-secondary" id="demo-btn">Esempio</button>
+      </div>
+      <p id="form-error" class="error" hidden></p>
+    </form>
+
+    <section id="report" class="panel report" hidden>
+      <div id="report-content"></div>
+    </section>
+    <section id="placeholder" class="panel placeholder">
+      <p>Inserisci le unità e premi <strong>Calcola ricostruzione</strong>.</p>
+      <p class="muted">Oppure premi <strong>Esempio</strong> per un caso tipico.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>brickvalue · valore di ricostruzione a nuovo a scopo assicurativo · stima indicativa.</p>
+  </footer>
+
+  <script src="/app/icons.js"></script>
+  <script src="/app/autocomplete.js"></script>
+  <script src="/app/condominio.js"></script>
+</body>
+</html>

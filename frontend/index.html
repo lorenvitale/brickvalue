@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>brickvalue — Valutazione immobiliare</title>
+  <link rel="stylesheet" href="/app/styles.css" />
+</head>
+<body class="landing">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo-ic"><use href="#i-brick"></use></svg>
+      <div>
+        <h1>brickvalue</h1>
+        <p class="tagline">Quanto vale, quanto costa ricostruirlo, quanto per la banca</p>
+      </div>
+    </div>
+    <a class="docs-link" href="/docs" target="_blank" rel="noopener">API</a>
+  </header>
+
+  <main class="hero">
+    <h2 class="hero-title">Valuta il tuo immobile</h2>
+    <p class="hero-sub">Scegli come vuoi procedere</p>
+
+    <div class="choices">
+      <a class="choice choice-base" href="/base">
+        <div class="choice-icon"><svg class="ic-xl"><use href="#i-home"></use></svg></div>
+        <h3>Versione semplice</h3>
+        <p>Per tutti. Rispondi a poche domande e ottieni subito il valore che ti serve —
+           ad esempio quanto vale ricostruire casa per la <strong>polizza</strong>.</p>
+        <span class="choice-cta">Inizia &rarr;</span>
+      </a>
+
+      <a class="choice choice-condo" href="/condominio">
+        <div class="choice-icon"><svg class="ic-xl"><use href="#i-building"></use></svg></div>
+        <h3>Condominio <span class="pill">assicuratori</span></h3>
+        <p>Valore di <strong>ricostruzione a nuovo</strong> dell'intero fabbricato e
+           ripartizione della somma da assicurare per unità (millesimi o superficie).</p>
+        <span class="choice-cta">Apri &rarr;</span>
+      </a>
+
+      <a class="choice choice-full" href="/full">
+        <div class="choice-icon"><svg class="ic-xl"><use href="#i-ruler"></use></svg></div>
+        <h3>Versione tecnico</h3>
+        <p>Per periti. Superficie commerciale, tre metodi di stima,
+           deprezzamento Ross-Heidecke e report completo.</p>
+        <span class="choice-cta">Apri lo strumento &rarr;</span>
+      </a>
+
+      <a class="choice choice-batch" href="/batch">
+        <div class="choice-icon"><svg class="ic-xl"><use href="#i-doc"></use></svg></div>
+        <h3>Stima massiva</h3>
+        <p>Incolla un <strong>elenco di immobili</strong> e ottieni tutte le valutazioni
+           in una tabella, con export CSV. Per portafogli e perizie multiple.</p>
+        <span class="choice-cta">Apri &rarr;</span>
+      </a>
+    </div>
+
+    <p class="hero-note">Stima indicativa secondo la prassi estimativa italiana ·
+      valore commerciale · valore di ricostruzione a nuovo · uso bancario e assicurativo.</p>
+  </main>
+
+  <footer class="footer">
+    <p>brickvalue · i valori vanno verificati con dati di mercato reali.</p>
+  </footer>
+
+  <script src="/app/icons.js"></script>
+</body>
+</html>
