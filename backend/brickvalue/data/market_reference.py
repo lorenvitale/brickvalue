@@ -199,6 +199,7 @@ class PlaceRef:
     lat: float | None
     lon: float | None
     eur_sqm: float | None
+    pop: int = 0
 
 
 def _load_places() -> tuple[dict[str, PlaceRef], dict[str, str], list[tuple[str, PlaceRef]]]:
@@ -210,17 +211,20 @@ def _load_places() -> tuple[dict[str, PlaceRef], dict[str, str], list[tuple[str,
     """
     rows = json.loads((_DATA_DIR / "comuni.json").read_text(encoding="utf-8"))
     by_norm: dict[str, PlaceRef] = {}
-    for name, prov, region, lat, lon in rows:
+    for name, prov, region, lat, lon, pop in rows:
         norm = normalize(name)
-        if norm not in by_norm:  # i pochi omonimi: tiene il primo
-            by_norm[norm] = PlaceRef(name, prov, region, lat, lon, None)
+        keep = by_norm.get(norm)
+        # tra gli omonimi tiene quello piu' popoloso
+        if keep is None or pop > keep.pop:
+            by_norm[norm] = PlaceRef(name, prov, region, lat, lon, None, pop)
 
     # Sovrappone i prezzi curati (nomi ufficiali -> match diretto).
     for cname, ref in CITY_PRICES.items():
         norm = normalize(cname)
         existing = by_norm.get(norm)
         official = existing.name if existing else cname
-        by_norm[norm] = PlaceRef(official, ref.province, ref.region, ref.lat, ref.lng, ref.eur_sqm)
+        pop = existing.pop if existing else 0
+        by_norm[norm] = PlaceRef(official, ref.province, ref.region, ref.lat, ref.lng, ref.eur_sqm, pop)
 
     alias_to_norm: dict[str, str] = {}
     text_index: list[tuple[str, PlaceRef]] = []
@@ -274,34 +278,42 @@ def find_city_in_text(text: str) -> str | None:
 
 
 def suggest_cities(query: str, limit: int = 5) -> list[PlaceRef]:
-    """Suggerisce comuni in base alla digitazione (autocompletamento fallback)."""
+    """Suggerisce comuni in base alla digitazione.
+
+    Match per *prefisso di parola* (niente match a meta' parola) e ordinamento
+    per rilevanza: prima il prefisso del nome intero, poi i comuni piu' popolosi.
+    Per gli indirizzi (es. "via roma mil") considera l'ultima parola = comune.
+    """
     nq = normalize(query)
     if len(nq) < 2:
         return []
     tokens = nq.split()
     last = tokens[-1]
+    use_last = len(last) >= 2
 
-    seen: set[str] = set()
-    tiers: list[list[tuple[int, PlaceRef]]] = [[], [], [], []]
+    scored: list[tuple[int, int, str, PlaceRef]] = []
     for norm, place in _SUGGEST_INDEX:
+        words = norm.split()
         if norm.startswith(nq):
             tier = 0
-        elif all(tok in norm for tok in tokens):
+        elif all(any(w.startswith(tok) for w in words) for tok in tokens):
             tier = 1
-        elif len(last) >= 2 and norm.startswith(last):
+        elif use_last and words[0].startswith(last):
             tier = 2
-        elif len(last) >= 3 and last in norm:
+        elif use_last and any(w.startswith(last) for w in words):
             tier = 3
         else:
             continue
-        tiers[tier].append((len(norm), place))
+        scored.append((tier, -place.pop, place.name, place))
 
+    scored.sort(key=lambda t: (t[0], t[1], t[2]))
     result: list[PlaceRef] = []
-    for tier in tiers:
-        for _, place in sorted(tier, key=lambda t: (t[0], t[1].name)):
-            if place.name not in seen:
-                seen.add(place.name)
-                result.append(place)
-                if len(result) >= limit:
-                    return result
+    seen: set[str] = set()
+    for _, _, name, place in scored:
+        if name in seen:
+            continue
+        seen.add(name)
+        result.append(place)
+        if len(result) >= limit:
+            break
     return result

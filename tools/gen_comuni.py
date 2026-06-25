@@ -4,8 +4,9 @@ Dipendenze di sviluppo (non runtime)::
 
     pip install italy-geopop pyarrow
 
-Estrae nome, provincia (sigla), regione e un centro rappresentativo (punto
-medio del bounding box dei poligoni ISTAT) per tutti i ~7.900 comuni.
+Estrae nome, provincia (sigla), regione, un centro rappresentativo (punto medio
+del bounding box dei poligoni ISTAT) e la popolazione per tutti i ~7.900 comuni.
+La popolazione serve a ordinare i suggerimenti per rilevanza.
 
 Uso::
 
@@ -82,13 +83,22 @@ def main() -> int:
     base = Path(italy_geopop.__file__).resolve().parent / "data"
     muni = feather.read_table(base / "2023_italy_municipalities.feather").to_pylist()
     geo = feather.read_table(base / "2023_italy_geo_municipalities.feather").to_pylist()
+    pop = feather.read_table(base / "2023_italy_pop.feather").to_pylist()
     geomap = {g["municipality_code"]: g["geometry"] for g in geo}
+
+    popmap: dict[str, int] = {}
+    for r in pop:  # righe per fascia d'eta': sommiamo il totale per comune
+        code = str(r["municipality_code"])
+        popmap[code] = popmap.get(code, 0) + (r["tot"] or 0)
 
     rows = []
     for m in muni:
         wkb = geomap.get(m["municipality_code"])
         lon, lat = _center(wkb) if wkb else (None, None)
-        rows.append([m["municipality"], m["province_short"], m["region"], lat, lon])
+        rows.append([
+            m["municipality"], m["province_short"], m["region"], lat, lon,
+            popmap.get(str(m["municipality_code"]), 0),
+        ])
 
     OUT.write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"Scritti {len(rows)} comuni in {OUT}")

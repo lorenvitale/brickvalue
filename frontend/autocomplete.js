@@ -49,10 +49,20 @@
       list.hidden = false;
     };
 
+    // Inserisce il comune scelto preservando la via gia' digitata.
+    // Per i risultati Google (indirizzo completo) sostituisce tutto.
+    const merge = (current, s) => {
+      if (s.source === "google") return s.description;
+      const name = s.municipality || s.description.replace(/\s*\([^)]*\)\s*$/, "");
+      const comma = current.lastIndexOf(",");
+      if (comma >= 0) return current.slice(0, comma + 1) + " " + name;
+      return name;
+    };
+
     const pick = (i) => {
       const s = items[i];
       if (!s) return;
-      input.value = s.description;
+      input.value = merge(input.value, s);
       close();
       if (onSelect) onSelect(s);
     };

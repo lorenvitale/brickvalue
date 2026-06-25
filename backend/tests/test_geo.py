@@ -253,6 +253,27 @@ def test_suggest_cities_small_town():
     assert "Desenzano del Garda" in names
 
 
+def test_suggest_ranks_major_city_first():
+    # Le grandi citta' devono comparire per prime (ordinamento per popolazione)
+    assert suggest_cities("mil", 6)[0].name == "Milano"
+    assert suggest_cities("fir", 6)[0].name == "Firenze"
+    assert suggest_cities("roma", 6)[0].name == "Roma"
+    assert suggest_cities("napoli", 6)[0].name == "Napoli"
+
+
+def test_suggest_no_midword_match():
+    # "reggio" non deve restituire match a meta' parola (Greggio, Bareggio, ...)
+    names = [p.name for p in suggest_cities("reggio", 12)]
+    assert "Greggio" not in names
+    assert "Bareggio" not in names
+    assert any("Reggio" in n for n in names)
+
+
+def test_suggest_address_with_street():
+    # "via roma, mil" deve comunque proporre Milano (ultima parola = comune)
+    assert "Milano" in [p.name for p in suggest_cities("via roma, mil", 6)]
+
+
 def test_suggest_cities_empty():
     assert suggest_cities("", 5) == []
 
