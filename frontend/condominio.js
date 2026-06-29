@@ -119,7 +119,9 @@ function kv(rows) {
 
 function renderReport(r) {
   const pin = window.ICON ? window.ICON("i-pin") : "📍";
-  let html = `<div class="report-actions no-print"><button type="button" class="btn-secondary" onclick="window.print()">Stampa / PDF</button></div>
+  let html = `<div class="report-actions no-print">
+    <button type="button" class="btn-secondary" onclick="window.downloadCondoPdf(this)">⭳ Scarica PDF</button>
+    <button type="button" class="btn-secondary" onclick="window.print()">Stampa</button></div>
     <h2>Ricostruzione a nuovo del condominio</h2>
     <p class="subtitle">${r.unit_count} unità · ${fmtNum(r.gross_area)} m² complessivi${r.region ? " · " + esc(r.region) : ""}</p>
     <div class="recommended">
@@ -230,6 +232,18 @@ function loadDemo() {
   addUnitRow("Scala B - Int 4", 75, 160);
   addUnitRow("Scala B - Int 5", 90, 200);
 }
+
+async function downloadPdf(url, payload, filename, trigger) {
+  const label = trigger ? trigger.textContent : "";
+  if (trigger) { trigger.disabled = true; trigger.textContent = "Genero PDF…"; }
+  try {
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(typeof d.detail === "string" ? d.detail : "PDF non disponibile"); }
+    const blob = await res.blob();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+  } catch (e) { alert(e.message); } finally { if (trigger) { trigger.disabled = false; trigger.textContent = label; } }
+}
+window.downloadCondoPdf = (btn) => downloadPdf("/api/condominio/pdf", buildRequest(), "brickvalue-condominio.pdf", btn);
 
 document.addEventListener("DOMContentLoaded", () => {
   $("#structure").innerHTML = STRUCTURES.map(([v, l]) => `<option value="${v}">${l}</option>`).join("");

@@ -3,6 +3,9 @@ fastapi>=0.115
 pydantic>=2.7
 uvicorn[standard]>=0.30
 
+# Generazione PDF (opzionale; richiede librerie di sistema pango/cairo)
+weasyprint>=60
+
 # Test dependencies
 pytest>=8.0
 httpx>=0.27

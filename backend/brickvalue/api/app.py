@@ -6,7 +6,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from pydantic import BaseModel, Field
@@ -25,6 +25,7 @@ from brickvalue.engine.autofill import lookup_address, run_quick, run_valuation
 from brickvalue.engine.batch import compute_batch
 from brickvalue.engine.condominium import compute_condominium
 from brickvalue.engine.surface import compute_surface
+from brickvalue import pdf as pdfgen
 from brickvalue.geo.client import is_google_enabled, suggest_addresses
 
 _FRONTEND_DIR = Path(__file__).resolve().parents[3] / "frontend"
@@ -124,6 +125,41 @@ def create_app() -> FastAPI:
     def post_batch(request: BatchValuationRequest) -> BatchResult:
         """Stima massiva di un elenco di immobili (errori isolati per riga)."""
         return compute_batch(request)
+
+    def _pdf(html: str, filename: str) -> Response:
+        if not pdfgen.is_available():
+            raise HTTPException(
+                status_code=503,
+                detail="Generazione PDF non disponibile: installare 'weasyprint'.",
+            )
+        return Response(
+            content=pdfgen.to_pdf(html),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
+    @app.post("/api/valuate/pdf", tags=["pdf"])
+    def post_valuate_pdf(request: ValuationRequest) -> Response:
+        """Perizia di stima in PDF."""
+        try:
+            report = run_valuation(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        return _pdf(pdfgen.valuation_html(report), "brickvalue-perizia.pdf")
+
+    @app.post("/api/condominio/pdf", tags=["pdf"])
+    def post_condominio_pdf(request: CondominiumRequest) -> Response:
+        """Prospetto condominio in PDF."""
+        try:
+            report = compute_condominium(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        return _pdf(pdfgen.condominium_html(report), "brickvalue-condominio.pdf")
+
+    @app.post("/api/valuate/batch/pdf", tags=["pdf"])
+    def post_batch_pdf(request: BatchValuationRequest) -> Response:
+        """Stima massiva in PDF."""
+        return _pdf(pdfgen.batch_html(compute_batch(request)), "brickvalue-stima-massiva.pdf")
 
     # Frontend statico (se presente)
     if _FRONTEND_DIR.is_dir():

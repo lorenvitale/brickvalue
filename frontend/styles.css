@@ -329,6 +329,15 @@ body.base { background: radial-gradient(900px 500px at 50% -10%, #e9fbf6 0%, rgb
   padding: 10px 12px; border: 1px solid #dde3ec; border-radius: var(--r-sm); resize: vertical; }
 #paste-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
 
+/* Cronologia valutazioni */
+#history-list { display: flex; flex-direction: column; gap: 7px; }
+.hist-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  background: #f8fafc; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 9px 11px;
+  cursor: pointer; font-family: inherit; transition: border-color 0.12s ease, background 0.12s ease; }
+.hist-item:hover { border-color: var(--brand-soft); background: var(--brand-tint); }
+.hist-label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.hist-meta { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
 /* Stima massiva */
 .badge-batch { background: var(--indigo); }
 .batch-wrap { max-width: 1180px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 22px; }
@@ -339,6 +348,7 @@ body.base { background: radial-gradient(900px 500px at 50% -10%, #e9fbf6 0%, rgb
   padding: 12px 14px; border: 1px solid #dde3ec; border-radius: var(--r); resize: vertical; line-height: 1.6; }
 #batch-area:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,0.15); }
 .batch-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.file-btn { cursor: pointer; display: inline-flex; align-items: center; }
 .batch-actions .btn-primary { flex: 0 0 auto; min-width: 180px; background: linear-gradient(180deg, #6366f1, var(--indigo)); box-shadow: 0 4px 14px rgba(79,70,229,0.28); }
 .batch-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
 .bs { background: #f8fafc; border: 1px solid var(--line); border-radius: var(--r); padding: 13px 15px; }

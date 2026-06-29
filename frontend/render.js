@@ -29,7 +29,9 @@ function renderReport(r) {
   const cs = r.surface.commercial_surface;
   let html = "";
 
-  html += `<div class="report-actions no-print"><button type="button" class="btn-secondary" onclick="window.print()">Stampa / PDF</button></div>`;
+  html += `<div class="report-actions no-print">
+    <button type="button" class="btn-secondary" onclick="window.downloadValuationPdf(this)">⭳ Scarica PDF</button>
+    <button type="button" class="btn-secondary" onclick="window.print()">Stampa</button></div>`;
   html += `<h2>Report di valutazione</h2>
     <p class="subtitle">Finalità: <strong>${esc(r.purpose)}</strong> · Superficie commerciale: <strong>${fmtNum(cs)} m²</strong></p>`;
 

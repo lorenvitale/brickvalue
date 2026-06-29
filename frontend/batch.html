@@ -31,9 +31,13 @@
       <textarea id="batch-area" rows="9" placeholder="Via Dante 1, Milano	95	appartamento	commerciale&#10;Corso Italia 5, Napoli	120	ufficio	commerciale&#10;Desenzano del Garda	85	appartamento	assicurativo"></textarea>
       <div class="batch-actions">
         <button type="button" class="btn-primary" id="run-btn">Valuta elenco</button>
+        <label class="btn-secondary file-btn">⭱ Carica CSV
+          <input type="file" id="file-input" accept=".csv,.tsv,.txt" hidden />
+        </label>
         <button type="button" class="btn-secondary" id="demo-btn">Esempio</button>
         <button type="button" class="btn-secondary" id="csv-btn" hidden>⭳ Scarica CSV</button>
-        <button type="button" class="btn-secondary" id="print-btn" hidden>Stampa / PDF</button>
+        <button type="button" class="btn-secondary" id="pdf-btn" hidden>⭳ Scarica PDF</button>
+        <button type="button" class="btn-secondary" id="print-btn" hidden>Stampa</button>
       </div>
       <p id="batch-error" class="error" hidden></p>
     </section>

@@ -172,7 +172,7 @@ function buildRequest() {
 
 /* ============================ Submit / Demo =============================== */
 async function onSubmit(ev) {
-  ev.preventDefault();
+  if (ev) ev.preventDefault();
   const btn = $("#submit-btn");
   const errEl = $("#form-error");
   errEl.hidden = true;
@@ -182,19 +182,21 @@ async function onSubmit(ev) {
     errEl.hidden = false;
     return;
   }
+  const req = buildRequest();
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Calcolo…';
   try {
     const res = await fetch("/api/valuate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildRequest()),
+      body: JSON.stringify(req),
     });
     const data = await res.json();
     if (!res.ok) {
       throw new Error(extractError(data));
     }
     renderReport(data);
+    pushHistory(req, data);
   } catch (e) {
     errEl.textContent = "Errore: " + e.message;
     errEl.hidden = false;
@@ -202,6 +204,80 @@ async function onSubmit(ev) {
     btn.disabled = false;
     btn.textContent = "Calcola valutazione";
   }
+}
+
+/* ============================ Cronologia (localStorage) ================== */
+const HISTORY_KEY = "bv-history-full";
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+  catch { return []; }
+}
+
+function historyLabel(req) {
+  const addr = req.property.location && req.property.location.address;
+  const area = (req.surface.components || []).reduce((s, c) => s + (c.area || 0), 0);
+  return addr || `${req.property.property_type.replace(/_/g, " ")} · ${area} m²`;
+}
+
+function pushHistory(req, data) {
+  let list = loadHistory();
+  list.unshift({ ts: Date.now(), label: historyLabel(req), value: data.recommended_value, request: req });
+  list = list.slice(0, 15);
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch { /* quota */ }
+  renderHistory();
+}
+
+function renderHistory() {
+  const box = $("#history-box");
+  const listEl = $("#history-list");
+  if (!box || !listEl) return;
+  const list = loadHistory();
+  box.hidden = list.length === 0;
+  listEl.innerHTML = list.map((h, i) =>
+    `<button type="button" class="hist-item" data-i="${i}">
+      <span class="hist-label">${esc(h.label)}</span>
+      <span class="hist-meta">${fmtEur(h.value)} · ${new Date(h.ts).toLocaleDateString("it-IT")}</span>
+    </button>`).join("");
+  listEl.querySelectorAll(".hist-item").forEach((b) =>
+    b.addEventListener("click", () => restoreHistory(Number(b.dataset.i))));
+}
+
+function restoreHistory(i) {
+  const h = loadHistory()[i];
+  if (!h) return;
+  loadFullRequest(h.request);
+  onSubmit();
+}
+
+function loadFullRequest(req) {
+  const f = $("#valuation-form").elements;
+  const set = (n, v) => { if (f[n] != null && v != null) f[n].value = v; };
+  const p = req.property || {};
+  set("property_type", p.property_type); set("structure", p.structure);
+  set("conservation", p.conservation); set("energy_class", p.energy_class || "");
+  set("year_built", p.year_built); set("year_renovated", p.year_renovated);
+  set("floor", p.floor); set("total_floors", p.total_floors);
+  f.has_elevator.checked = !!p.has_elevator; f.is_penthouse.checked = !!p.is_penthouse;
+  const loc = p.location || {};
+  set("address", loc.address || ""); set("municipality", loc.municipality || "");
+  set("cadastral_ref", loc.cadastral_ref || "");
+  set("purpose", req.purpose);
+  set("base_unit_value", req.market && req.market.base_unit_value);
+  const c = req.cost || {};
+  set("gross_floor_area", c.gross_floor_area); set("construction_cost_per_sqm", c.construction_cost_per_sqm);
+  set("land_value", c.land_value); set("vat_pct", c.vat_pct != null ? c.vat_pct * 100 : null);
+  const inc = req.income || {};
+  set("monthly_rent", inc.monthly_rent); set("cap_rate", inc.cap_rate != null ? inc.cap_rate * 100 : null);
+  set("wall_incidence_pct", (req.surface.wall_incidence_pct || 0) * 100);
+  $("#surface-rows").innerHTML = "";
+  (req.surface.components || []).forEach((comp) => {
+    addSurfaceRow(comp.type, comp.area);
+    const row = $("#surface-rows").lastElementChild;
+    if (comp.coefficient != null) row.querySelector(".s-coef").value = comp.coefficient;
+  });
+  if (!req.surface.components || !req.surface.components.length) addSurfaceRow();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function extractError(data) {
@@ -281,6 +357,33 @@ async function detectZone() {
   }
 }
 
+async function downloadPdf(url, payload, filename, trigger) {
+  const label = trigger ? trigger.textContent : "";
+  if (trigger) { trigger.disabled = true; trigger.textContent = "Genero PDF…"; }
+  try {
+    const res = await fetch(url, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(typeof d.detail === "string" ? d.detail : "PDF non disponibile");
+    }
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    if (trigger) { trigger.disabled = false; trigger.textContent = label; }
+  }
+}
+window.downloadPdf = downloadPdf;
+window.downloadValuationPdf = (btn) =>
+  downloadPdf("/api/valuate/pdf", buildRequest(), "brickvalue-perizia.pdf", btn);
+
 /* ============================ Avvio ====================================== */
 document.addEventListener("DOMContentLoaded", () => {
   initForm();
@@ -297,4 +400,5 @@ document.addEventListener("DOMContentLoaded", () => {
       if (v && v !== lastDetectedAddress) detectZone();
     });
   }
+  renderHistory();
 });

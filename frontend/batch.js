@@ -25,6 +25,7 @@ const PURPOSE_ALIASES = {
 };
 
 let lastResult = null;
+let lastItems = [];
 
 function num(s) {
   const n = Number(String(s).replace(",", ".").replace(/[^\d.]/g, ""));
@@ -92,7 +93,22 @@ function renderResults(res) {
     </tr></thead><tbody>${rows}</tbody></table></div>`;
   $("#batch-results").hidden = false;
   $("#csv-btn").hidden = false;
+  $("#pdf-btn").hidden = false;
   $("#print-btn").hidden = false;
+}
+
+async function downloadPdf(btn) {
+  if (!lastItems.length) return;
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Genero PDF…";
+  try {
+    const res = await fetch("/api/valuate/batch/pdf", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: lastItems }),
+    });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(typeof d.detail === "string" ? d.detail : "PDF non disponibile"); }
+    const blob = await res.blob();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "brickvalue-stima-massiva.pdf"; a.click(); URL.revokeObjectURL(a.href);
+  } catch (e) { alert(e.message); } finally { btn.disabled = false; btn.textContent = label; }
 }
 
 function toCSV(res) {
@@ -128,6 +144,7 @@ async function run() {
     err.hidden = false;
     return;
   }
+  lastItems = items;
   const btn = $("#run-btn");
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Valutazione…';
@@ -158,9 +175,23 @@ function loadDemo() {
     "Lecce centro\t110\tnegozio\tcommerciale";
 }
 
+function loadFile(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    $("#batch-area").value = String(reader.result || "");
+    ev.target.value = ""; // consente di ricaricare lo stesso file
+    run();
+  };
+  reader.readAsText(file);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   $("#run-btn").addEventListener("click", run);
+  $("#file-input").addEventListener("change", loadFile);
   $("#demo-btn").addEventListener("click", loadDemo);
   $("#csv-btn").addEventListener("click", downloadCSV);
+  $("#pdf-btn").addEventListener("click", () => downloadPdf($("#pdf-btn")));
   $("#print-btn").addEventListener("click", () => window.print());
 });

@@ -154,9 +154,17 @@ print(report.recommended_value)          # valore consigliato per la finalità
 | POST   | `/api/valuate/quick` | Valutazione rapida (versione base)           |
 | POST   | `/api/condominio`    | Ricostruzione a nuovo condominio + ripartizione |
 | POST   | `/api/valuate/batch` | Stima massiva da elenco di immobili          |
+| POST   | `/api/valuate/pdf`   | Perizia di stima in PDF (WeasyPrint)         |
+| POST   | `/api/condominio/pdf`| Prospetto condominio in PDF                  |
+| POST   | `/api/valuate/batch/pdf` | Stima massiva in PDF                     |
 
-Pagine: `/` (scelta), `/base`, `/condominio`, `/batch`, `/full`. Ogni report
-ha il pulsante **Stampa / PDF** (`window.print()` + CSS di stampa).
+Pagine: `/` (scelta), `/base`, `/condominio`, `/batch`, `/full`. Ogni report ha
+**Scarica PDF** (server, WeasyPrint) e **Stampa**. La stima massiva accetta
+incolla o **caricamento CSV**; l'app tecnico salva le **valutazioni recenti**
+nel browser (localStorage).
+
+Il PDF richiede l'extra opzionale: `pip install -e ".[pdf]"` (o `pip install
+weasyprint`, che a sua volta richiede le librerie di sistema pango/cairo).
 
 Il dataset dei comuni è in `backend/brickvalue/data/comuni.json`; per rigenerarlo
 (dev): `pip install italy-geopop pyarrow && python tools/gen_comuni.py`.
