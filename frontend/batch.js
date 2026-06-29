@@ -93,7 +93,7 @@ function renderResults(res) {
     </tr></thead><tbody>${rows}</tbody></table></div>`;
   $("#batch-results").hidden = false;
   $("#csv-btn").hidden = false;
-  $("#pdf-btn").hidden = false;
+  $("#pdf-btn").hidden = !window.BV_PDF;
   $("#print-btn").hidden = false;
 }
 
@@ -188,6 +188,7 @@ function loadFile(ev) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  fetch("/api/health").then((r) => r.json()).then((h) => { window.BV_PDF = !!h.pdf; }).catch(() => {});
   $("#run-btn").addEventListener("click", run);
   $("#file-input").addEventListener("change", loadFile);
   $("#demo-btn").addEventListener("click", loadDemo);

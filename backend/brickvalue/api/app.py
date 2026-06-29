@@ -78,6 +78,7 @@ def create_app() -> FastAPI:
             "service": "brickvalue",
             "version": __version__,
             "google_maps": is_google_enabled(),
+            "pdf": pdfgen.is_available(),
         }
 
     @app.post("/api/geocode", response_model=GeoLookupResult, tags=["geo"])

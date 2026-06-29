@@ -1,0 +1,53 @@
+============================================
+  brickvalue — come usarlo su Windows
+============================================
+
+PRIMA VOLTA (una sola volta)
+----------------------------
+1) Installa Python (se non ce l'hai):
+   - Vai su  https://www.python.org/downloads/
+   - Scarica e avvia l'installazione
+   - IMPORTANTE: spunta la casella "Add Python to PATH" in basso, poi "Install Now"
+
+2) Scarica questa cartella "brickvalue" sul computer
+   (se l'hai presa da GitHub: pulsante verde "Code" > "Download ZIP", poi estrai lo ZIP).
+
+
+OGNI VOLTA CHE VUOI USARLO
+--------------------------
+1) Apri la cartella brickvalue
+2) Fai doppio clic su:   Avvia-brickvalue.bat
+3) Si apre una finestra nera (il "motore") e dopo qualche secondo si apre il
+   browser sulla pagina di brickvalue.
+   (Il primo avvio è più lento perché prepara tutto: 1-2 minuti. I successivi
+   sono immediati.)
+
+4) Usa l'app dal browser. Scegli:
+   - Versione semplice  (per stime veloci)
+   - Condominio         (per assicuratori)
+   - Stima massiva      (elenco di immobili)
+   - Versione tecnico   (perizia completa)
+
+5) Per SPEGNERLO: chiudi la finestra nera.
+
+
+SALVARE IN PDF
+--------------
+In ogni report c'è il pulsante "Stampa / salva PDF":
+cliccalo, poi nella finestra di stampa scegli come stampante
+"Salva come PDF" (Microsoft Print to PDF) e premi Salva.
+
+
+SUGGERIMENTI INDIRIZZO PIÙ PRECISI (facoltativo)
+------------------------------------------------
+Senza configurazione i suggerimenti sono a livello di Comune (vanno benissimo).
+Se vuoi i suggerimenti a livello di via tramite Google, serve una chiave Google
+Maps: dimmelo e ti preparo le istruzioni.
+
+
+PROBLEMI?
+---------
+- "Windows ha protetto il PC": clicca "Ulteriori informazioni" > "Esegui comunque"
+  (succede perché il file non è firmato; è uno script di avvio innocuo).
+- Se il browser mostra pagina bianca o errore: aspetta 5 secondi e ricarica,
+  oppure apri a mano  http://127.0.0.1:8000

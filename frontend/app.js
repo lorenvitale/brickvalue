@@ -401,4 +401,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   renderHistory();
+  fetch("/api/health").then((r) => r.json()).then((h) => { window.BV_PDF = !!h.pdf; }).catch(() => {});
 });

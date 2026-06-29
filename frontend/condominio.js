@@ -119,9 +119,11 @@ function kv(rows) {
 
 function renderReport(r) {
   const pin = window.ICON ? window.ICON("i-pin") : "📍";
-  let html = `<div class="report-actions no-print">
-    <button type="button" class="btn-secondary" onclick="window.downloadCondoPdf(this)">⭳ Scarica PDF</button>
-    <button type="button" class="btn-secondary" onclick="window.print()">Stampa</button></div>
+  const pdfBtn = window.BV_PDF
+    ? `<button type="button" class="btn-secondary" onclick="window.downloadCondoPdf(this)">⭳ Scarica PDF</button>`
+    : "";
+  let html = `<div class="report-actions no-print">${pdfBtn}
+    <button type="button" class="btn-secondary" onclick="window.print()">Stampa / salva PDF</button></div>
     <h2>Ricostruzione a nuovo del condominio</h2>
     <p class="subtitle">${r.unit_count} unità · ${fmtNum(r.gross_area)} m² complessivi${r.region ? " · " + esc(r.region) : ""}</p>
     <div class="recommended">
@@ -246,6 +248,7 @@ async function downloadPdf(url, payload, filename, trigger) {
 window.downloadCondoPdf = (btn) => downloadPdf("/api/condominio/pdf", buildRequest(), "brickvalue-condominio.pdf", btn);
 
 document.addEventListener("DOMContentLoaded", () => {
+  fetch("/api/health").then((r) => r.json()).then((h) => { window.BV_PDF = !!h.pdf; }).catch(() => {});
   $("#structure").innerHTML = STRUCTURES.map(([v, l]) => `<option value="${v}">${l}</option>`).join("");
   addUnitRow();
   $("#condo-form").addEventListener("submit", onSubmit);

@@ -145,6 +145,7 @@ def _stub(data: dict) -> str:
 const __of = window.fetch ? window.fetch.bind(window) : null;
 window.fetch = (url, opts) => {{
   const u = String(url);
+  if (u.includes('/api/health')) return Promise.resolve({{ ok:true, json:()=>Promise.resolve({{status:'ok', pdf:false, google_maps:false}}) }});
   if (u.includes('/pdf')) return Promise.resolve({{ ok:false, json:()=>Promise.resolve({{detail:"Il PDF si genera solo nell'app reale (python -m brickvalue)."}}) }});
   if (u.includes('/api/geocode/suggest')) return Promise.resolve({{ ok:true, json:()=>Promise.resolve(__SUGGEST__) }});
   if (u.includes('/api/geocode')) return Promise.resolve({{ ok:true, json:()=>Promise.resolve(__GEO__) }});
