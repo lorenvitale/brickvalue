@@ -49,10 +49,10 @@
       list.hidden = false;
     };
 
-    // Inserisce il comune scelto preservando la via gia' digitata.
-    // Per i risultati Google (indirizzo completo) sostituisce tutto.
+    // I provider con indirizzo completo (Google, Photon) sostituiscono tutto;
+    // il dataset comuni inserisce solo il comune preservando la via digitata.
     const merge = (current, s) => {
-      if (s.source === "google") return s.description;
+      if (s.source !== "dataset") return s.description;
       const name = s.municipality || s.description.replace(/\s*\([^)]*\)\s*$/, "");
       const comma = current.lastIndexOf(",");
       if (comma >= 0) return current.slice(0, comma + 1) + " " + name;

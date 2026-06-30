@@ -38,11 +38,13 @@ cliccalo, poi nella finestra di stampa scegli come stampante
 "Salva come PDF" (Microsoft Print to PDF) e premi Salva.
 
 
-SUGGERIMENTI INDIRIZZO PIÙ PRECISI (facoltativo)
-------------------------------------------------
-Senza configurazione i suggerimenti sono a livello di Comune (vanno benissimo).
-Se vuoi i suggerimenti a livello di via tramite Google, serve una chiave Google
-Maps: dimmelo e ti preparo le istruzioni.
+SUGGERIMENTI INDIRIZZO
+----------------------
+Mentre digiti l'indirizzo compaiono i suggerimenti:
+- Con internet: suggerimenti a livello di VIA e civico (gratis, via OpenStreetMap/
+  Photon — non serve alcuna chiave). Es. "piazza vanvitelli napoli" propone la via.
+- Senza internet: suggerimenti a livello di Comune (dal database incluso).
+Se vuoi la massima precisione di Google, serve una chiave Google Maps: chiedimela.
 
 
 PROBLEMI?

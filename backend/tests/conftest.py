@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+import os
+
 import pytest
+
+# I test non devono dipendere dalla rete: disattiva i provider online (Photon).
+# I percorsi che iniettano un ``fetch`` restano testabili.
+os.environ.setdefault("BRICKVALUE_OFFLINE", "1")
 
 from brickvalue.domain.enums import (
     ConservationState,

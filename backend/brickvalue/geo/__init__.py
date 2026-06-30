@@ -7,6 +7,7 @@ from brickvalue.geo.client import (
     autocomplete,
     geocode,
     is_google_enabled,
+    photon_autocomplete,
     resolve_location,
     suggest_addresses,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "autocomplete",
     "geocode",
     "is_google_enabled",
+    "photon_autocomplete",
     "resolve_location",
     "suggest_addresses",
 ]

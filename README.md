@@ -169,18 +169,21 @@ weasyprint`, che a sua volta richiede le librerie di sistema pango/cairo).
 Il dataset dei comuni è in `backend/brickvalue/data/comuni.json`; per rigenerarlo
 (dev): `pip install italy-geopop pyarrow && python tools/gen_comuni.py`.
 
-### Google Maps (parametri automatici)
+### Autocompletamento e geocodifica
 
-Imposta la chiave per la geocodifica precisa (coordinate → centralità):
+Suggerimenti indirizzo a cascata: **Google Places** (se è configurata
+`GOOGLE_MAPS_API_KEY`) → **Photon/OpenStreetMap** (gratuito, livello via, nessuna
+chiave, richiede connessione) → **dataset dei comuni** (offline). Per la
+geocodifica precisa con coordinate (centralità) imposta la chiave:
 
 ```bash
 export GOOGLE_MAPS_API_KEY="la-tua-chiave"
 ```
 
 Senza chiave il sistema riconosce comunque il comune dall'indirizzo e usa il
-dataset di riferimento (`backend/brickvalue/data/market_reference.py`). Quando
-una richiesta contiene un indirizzo e non specifica il valore di zona, questo
-viene dedotto automaticamente (campo `geo` nel report).
+dataset di riferimento. Quando una richiesta contiene un indirizzo e non
+specifica il valore di zona, questo viene dedotto automaticamente (campo `geo`
+nel report). I test girano offline (`BRICKVALUE_OFFLINE=1`).
 
 Esempio:
 

@@ -17,6 +17,8 @@ from brickvalue.domain.geo import AddressSuggestion, GeoLocation, SuggestResult
 
 GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 AUTOCOMPLETE_URL = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+# Photon (OpenStreetMap, Komoot): autocompletamento indirizzi gratuito, senza chiave.
+PHOTON_URL = "https://photon.komoot.io/api/"
 
 Fetcher = Callable[[str, dict, float], dict]
 
@@ -182,6 +184,72 @@ def autocomplete(
     return out
 
 
+def _photon_description(props: dict) -> str | None:
+    """Costruisce una descrizione leggibile da una feature Photon (solo Italia)."""
+    street = props.get("street")
+    housenumber = props.get("housenumber")
+    name = props.get("name")
+    city = props.get("city") or props.get("county") or props.get("state")
+    if street:
+        line = f"{street} {housenumber}".strip() if housenumber else street
+    else:
+        line = name
+    parts = [p for p in (line, city) if p]
+    if not parts:
+        return None
+    if len(parts) == 2 and parts[0] == parts[1]:
+        parts = [parts[0]]
+    return ", ".join(parts)
+
+
+def photon_autocomplete(
+    query: str,
+    *,
+    timeout: float = 3.0,
+    fetch: Fetcher | None = None,
+    limit: int = 5,
+) -> list[AddressSuggestion]:
+    """Suggerimenti a livello di via via Photon (gratuito). Solleva GeoError se non raggiungibile."""
+    if not query or not query.strip():
+        return []
+    do_fetch = fetch or _default_fetch
+    try:
+        data = do_fetch(
+            PHOTON_URL,
+            {"q": query, "lang": "it", "limit": str(limit + 4), "lat": "42.5", "lon": "12.5"},
+            timeout,
+        )
+    except Exception as exc:
+        raise GeoError(f"Photon non raggiungibile: {exc}") from exc
+
+    out: list[AddressSuggestion] = []
+    seen: set[str] = set()
+    for feat in data.get("features", []):
+        props = feat.get("properties", {})
+        if props.get("countrycode") != "IT":
+            continue
+        desc = _photon_description(props)
+        if not desc or desc in seen:
+            continue
+        seen.add(desc)
+        out.append(
+            AddressSuggestion(
+                description=desc,
+                municipality=props.get("city") or props.get("county"),
+                source="photon",
+            )
+        )
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _use_online(fetch: Fetcher | None) -> bool:
+    """Se usare provider online: sempre con fetch iniettato (test), altrimenti salvo
+    quando ``BRICKVALUE_OFFLINE`` e' impostata (per i test deterministici)."""
+    return fetch is not None or not os.environ.get("BRICKVALUE_OFFLINE")
+
+
 def suggest_addresses(
     query: str,
     *,
@@ -189,9 +257,12 @@ def suggest_addresses(
     fetch: Fetcher | None = None,
     limit: int = 5,
 ) -> SuggestResult:
-    """Autocompletamento con Google Places, fallback sui comuni del dataset. Non solleva."""
+    """Autocompletamento indirizzo: Google Places (se chiave) -> Photon (gratuito,
+    livello via) -> comuni del dataset (offline). Non solleva mai."""
     limit = max(1, min(10, limit))
-    if api_key or is_google_enabled() or fetch is not None:
+
+    # 1. Google Places (massima precisione, richiede chiave)
+    if api_key or is_google_enabled():
         try:
             preds = autocomplete(query, api_key=api_key, fetch=fetch, limit=limit)
             if preds:
@@ -199,6 +270,16 @@ def suggest_addresses(
         except GeoError:
             pass
 
+    # 2. Photon (gratuito, livello via/civico) quando c'e' rete
+    if _use_online(fetch):
+        try:
+            preds = photon_autocomplete(query, fetch=fetch, limit=limit)
+            if preds:
+                return SuggestResult(query=query, source="photon", suggestions=preds)
+        except GeoError:
+            pass
+
+    # 3. Dataset dei comuni (sempre disponibile, offline)
     suggestions = [
         AddressSuggestion(
             description=f"{place.name} ({place.prov})", municipality=place.name, source="dataset"

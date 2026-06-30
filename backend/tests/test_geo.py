@@ -322,3 +322,43 @@ def test_suggest_addresses_no_match():
     res = suggest_addresses("zzzqqq")
     assert res.source == "nessuna"
     assert res.suggestions == []
+
+
+# --------------------------------------------------------------------------
+# Photon (suggerimenti a livello di via, gratuito)
+# --------------------------------------------------------------------------
+def _fake_photon(url, params, timeout):
+    return {"features": [
+        {"properties": {"name": "Piazza Vanvitelli", "city": "Napoli",
+                        "state": "Campania", "countrycode": "IT"}},
+        {"properties": {"street": "Via Roma", "housenumber": "10",
+                        "city": "Napoli", "countrycode": "IT"}},
+        {"properties": {"name": "Vanvitelli", "city": "Wien", "countrycode": "AT"}},
+    ]}
+
+
+def test_photon_autocomplete_parses_and_filters():
+    from brickvalue.geo.client import photon_autocomplete
+
+    out = photon_autocomplete("piazza vanvitelli 1 napoli", fetch=_fake_photon)
+    descs = [s.description for s in out]
+    assert "Piazza Vanvitelli, Napoli" in descs
+    assert "Via Roma 10, Napoli" in descs
+    assert all(s.source == "photon" for s in out)
+    # la voce estera (Wien, AT) e' esclusa
+    assert not any("Wien" in d for d in descs)
+
+
+def test_suggest_addresses_uses_photon():
+    res = suggest_addresses("piazza vanvitelli 1 napoli", fetch=_fake_photon)
+    assert res.source == "photon"
+    assert any("Vanvitelli" in s.description for s in res.suggestions)
+
+
+def test_suggest_addresses_photon_failure_falls_back_to_dataset():
+    def _boom(url, params, timeout):
+        raise RuntimeError("offline")
+
+    res = suggest_addresses("Torino", fetch=_boom)
+    assert res.source == "dataset"
+    assert any(s.municipality == "Torino" for s in res.suggestions)
